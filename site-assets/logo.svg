@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"
+     fill="none" stroke="#ffffff" stroke-width="2"
+     stroke-linecap="round" stroke-linejoin="round">
+  <!--
+    讲义站点标识：一个开口的环 = 智能体循环（第 03 章手写的那条），
+    中心的实心点 = 循环里的 agent，右上角的箭头 = 它每次必须重新做决定、
+    并继续往前走的地方。
+
+    两处刻意为之，别“顺手改回去”：
+
+    1. 颜色写死 #ffffff，不用 currentColor。
+       因为 theme.logo 是被渲染成 <img src="..."> 的（见主题的 partials/logo.html），
+       CSS 里的 fill:currentcolor 够不到 <img> 内部那个独立文档；用 currentColor
+       会解析成 SVG 自己的 color（默认黑），压在靛蓝顶栏上就是隐形。
+       两个配色的 primary 都是 indigo、顶栏都是深底白字，所以白色在两边都成立。
+       若哪天把 primary 改成浅色系，这里要跟着改。
+
+    2. 缺口用 stroke-dasharray 在整圆上截出来，而不是手写弧线路径。
+       圆周 2π×8.5 ≈ 53.41，留 60° 缺口 ≈ 8.90，所以画 44.51、空 8.90；
+       缺口位置只由 dashoffset 控制，不必推 arc 命令的 sweep 方向。
+       整圆自 3 点钟起顺时针绘制，因此这 60° 缺口落在右上方（1 点到 3 点之间）。
+
+    箭头是算出来的，不是试出来的：弧线终点在屏幕角 300°、半径 8.5 处，
+    即 P=(16.25, 4.64)；顺时针切线 T=(0.866, 0.5)，法线 N=(-0.5, 0.866)。
+    顶点 = P + 3.4T，两个底角 = P ± 2.0N —— 底边正好径向贴着 300°、弧线末端。
+  -->
+  <circle cx="12" cy="12" r="8.5" stroke-dasharray="44.51 8.90" stroke-dashoffset="0"/>
+  <circle cx="12" cy="12" r="2.4" fill="#ffffff" stroke="none"/>
+  <path d="M19.19 6.34 L15.25 6.37 L17.25 2.91 Z" fill="#ffffff" stroke="none"/>
+</svg>

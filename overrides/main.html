@@ -1,0 +1,48 @@
+{#-
+  模板覆盖：只做一件事 —— 补上社交分享用的元信息。
+
+  为什么需要它：Zensical 0.0.64 自己往 <head> 里只写四条 meta
+  （charset / viewport / description / generator），一个 og: 或 twitter: 都没有。
+  结果是链接发到微信、Telegram、X 里时只有一行干巴巴的标题，没有预览图。
+
+  用法：路径由 zensical.toml 里的 custom_dir = "overrides" 指定。
+  可用 block 见 zensical 包内 templates/base.html（有 extrahead、site_meta、styles…），
+  这里挂在 extrahead 上，它会落在 <head> 内部。
+
+  注意：og:image 必须是**绝对地址** —— 抓取器不会去猜相对路径；
+  而站内资源（apple-touch-icon）必须走 | url 过滤，否则子路径部署下
+  /05-状态与条件边/ 这类页面会把相对路径解析到自己目录里去。
+-#}
+{% extends "base.html" %}
+
+{% block extrahead %}
+  {% set og_image = config.site_url ~ 'assets/og-image.png' %}
+  {#-
+    首页判定用 "page.url 为空"，不要用 page.is_homepage —— 后者在 Zensical 0.0.64
+    里根本不存在，Jinja 会静默当作 undefined（不报错），于是首页 og:title
+    变成 "开始 - 教程名" 这种奇怪的前缀。已验证首页 page.url == ''。
+  -#}
+  {% set is_home = page and not page.url %}
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ config.site_name }}">
+  {% if is_home %}
+  <meta property="og:title" content="{{ config.site_name }}">
+  {% elif page and page.title %}
+  <meta property="og:title" content="{{ page.title }} - {{ config.site_name }}">
+  {% else %}
+  <meta property="og:title" content="{{ config.site_name }}">
+  {% endif %}
+  <meta property="og:description" content="{{ config.site_description }}">
+  <meta property="og:image" content="{{ og_image }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="{{ config.site_name }}">
+  {#- page 存在就一定能拼出 og:url：首页的 page.url 是空串，拼出来正好是 site_url。 -#}
+  {% if page %}<meta property="og:url" content="{{ config.site_url }}{{ page.url }}">{% endif %}
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="{{ og_image }}">
+
+  <link rel="apple-touch-icon" href="{{ 'assets/apple-touch-icon.png' | url }}">
+{% endblock %}

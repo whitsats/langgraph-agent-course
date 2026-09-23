@@ -12,4 +12,10 @@
 # 为什么是 Zensical 而不是 mkdocs-material：后者已定于 2026-11-05 EOL，
 # 9.7.0 是最后一版，底层 MkDocs 1.x 自 2024-08 起无人维护，且 2.0 明确没有迁移路径。
 # Zensical 是同一团队（squidfunk）的官方继任者，自带保持 Material 外观的 classic 主题变体。
-zensical
+#
+# 锁到精确版本，不跟着小版本跑。两个原因：
+#   1. 它还是 0.0.x，任何一个小版本都可能有破坏性改动；
+#   2. overrides/main.html 依赖它的模板 block 名（extrahead）—— 那是未文档化的内部
+#      约定，一旦改名，og:/twitter: 标签会静默消失（构建还照样绿），
+#      分享卡片退回“只有一行标题”。升级时请先本地 build 一次并看输出里还有没有 og:。
+zensical==0.0.64

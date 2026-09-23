@@ -62,6 +62,15 @@ nav = [
 # classic = 保留 Material for MkDocs 的外观（Zensical 自带的主题变体）
 variant = "classic"
 language = "zh"
+# 模板覆盖目录。目前只用它补 og:/twitter: 分享预览标签 ——
+# 0.0.64 自己只输出 <meta name="description">，没有任何社交分享标签。
+# 详见 overrides/main.html 顶部注释。
+custom_dir = "overrides"
+# logo 与 favicon 都必须是 docs_dir（即 site-src/）内的路径，
+# 由 tools/build_site.py 从 site-assets/ 复制进去；
+# 其中的位图由 tools/make_assets.py 从 logo.svg 派生。
+logo = "assets/logo.svg"
+favicon = "assets/favicon.ico"
 features = [
   "navigation.tracking",
   "navigation.top",
@@ -71,15 +80,21 @@ features = [
   "search.highlight",
 ]
 
+# primary 显式写出来，不靠默认值：顶栏颜色决定了 logo 必须是白色
+# （theme.logo 被渲染成 <img>，CSS 的 fill:currentcolor 到不了里面，
+#   所以 site-assets/logo.svg 的颜色是写死的）。若哪天把 primary 改成浅色系，
+# 记得同时改 logo.svg 里的颜色，否则白标识会隐形。
 [[project.theme.palette]]
 media = "(prefers-color-scheme: light)"
 scheme = "default"
+primary = "indigo"
 toggle.icon = "lucide/sun"
 toggle.name = "切到深色"
 
 [[project.theme.palette]]
 media = "(prefers-color-scheme: dark)"
 scheme = "slate"
+primary = "indigo"
 toggle.icon = "lucide/moon"
 toggle.name = "切到浅色"
 

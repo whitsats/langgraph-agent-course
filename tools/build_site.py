@@ -29,23 +29,11 @@ import shutil
 import sys
 from pathlib import Path
 
+from _console import setup_console  # noqa: E402  （同目录的兄弟模块）
+
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "site-src"
-
-
-def _setup_console() -> None:
-    """把控制台输出切到 UTF-8（Windows 上这一步是必须的）。
-
-    实测：Windows 默认代码页 GBK，下面那行带 ✓ 的汇总会直接把这个脚本弄死：
-        UnicodeEncodeError: 'gbk' codec can't encode character '\u2713'
-    报错位置跟真正的工作毫无关系，很容易误判成“复制文件失败”。
-    跟 examples/_shared.py 里同一个处理，这里重复一遍是为了让本脚本只依赖标准库。
-    """
-    for stream in (sys.stdout, sys.stderr):
-        try:
-            stream.reconfigure(encoding="utf-8", errors="replace")
-        except (AttributeError, ValueError, OSError):
-            pass
+ASSETS_SRC = ROOT / "site-assets"
 
 # 单独搬运、且要改名的页面：(源文件, 站点里的文件名)
 EXTRA_PAGES = [
@@ -64,7 +52,7 @@ REWRITES = [
 
 
 def main() -> int:
-    _setup_console()
+    setup_console()
 
     if OUT.exists():
         shutil.rmtree(OUT)
@@ -84,6 +72,18 @@ def main() -> int:
             return 1
         shutil.copy2(src, OUT / name)
 
+    # 站点素材（logo / favicon / 分享预览图）也必须位于 docs_dir 内部，
+    # 所以同样复制一份。源文件是 site-assets/，其中位图由 tools/make_assets.py
+    # 从 logo.svg 派生 —— 仓库里不存第二份标识定义。
+    copied_assets = 0
+    if ASSETS_SRC.is_dir():
+        assets_dst = OUT / "assets"
+        assets_dst.mkdir(parents=True, exist_ok=True)
+        for item in sorted(ASSETS_SRC.iterdir()):
+            if item.is_file():
+                shutil.copy2(item, assets_dst / item.name)
+                copied_assets += 1
+
     touched = 0
     for page in OUT.glob("*.md"):
         text = page.read_text(encoding="utf-8")
@@ -95,7 +95,7 @@ def main() -> int:
             touched += 1
 
     pages = sorted(OUT.glob("*.md"))
-    print(f"✓ 已生成 {OUT.relative_to(ROOT)}/：{len(pages)} 页，改写了 {touched} 个文件里的跨目录链接")
+    print(f"✓ 已生成 {OUT.relative_to(ROOT)}/：{len(pages)} 页，{copied_assets} 个站点素材，改写了 {touched} 个文件里的跨目录链接")
     print("  本地预览：uvx --with-requirements requirements-docs.txt zensical serve")
     return 0
 

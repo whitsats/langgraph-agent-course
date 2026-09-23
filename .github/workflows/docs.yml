@@ -12,6 +12,11 @@ on:
       - "zensical.toml"
       - "requirements-docs.txt"
       - "tools/build_site.py"
+      # 站点素材（logo / favicon / 分享预览图）与模板覆盖也必须在这里列出，
+      # 否则换了图标推上去，站点根本不会重建，线上仍挂着旧图。
+      # 注意：不包括 tools/make_assets.py —— 它只生成素材，改它不影响构建产物。
+      - "site-assets/**"
+      - "overrides/**"
       - ".github/workflows/docs.yml"
   workflow_dispatch:
 
