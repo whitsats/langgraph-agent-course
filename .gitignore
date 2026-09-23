@@ -22,6 +22,11 @@ examples/checkpoints.db-*
 *.sqlite
 *.sqlite3
 
+# ── 文档站点的构建产物（由 tools/build_site.py 与 zensical 生成）──
+site-src/
+site-out/
+.cache/
+
 # ── 工具本地状态 ──────────────────────────────────────────────
 .freebuff/
 

@@ -1,0 +1,15 @@
+# 文档站点（GitHub Pages）的构建工具。
+#
+# 这不是本项目的运行依赖 —— 只读讲义、跑 examples/ 的人不需要它。
+# zensical 是个 CLI 工具，所以用 uvx 隔离运行，不碰仓库根目录的 .venv：
+#
+#   uvx --with-requirements requirements-docs.txt zensical serve    # 本地预览
+#   uvx --with-requirements requirements-docs.txt zensical build --strict
+#
+# 跑之前记得先拼装源文件：uv run python tools/build_site.py
+# CI 用同一条命令，见 .github/workflows/docs.yml。
+#
+# 为什么是 Zensical 而不是 mkdocs-material：后者已定于 2026-11-05 EOL，
+# 9.7.0 是最后一版，底层 MkDocs 1.x 自 2024-08 起无人维护，且 2.0 明确没有迁移路径。
+# Zensical 是同一团队（squidfunk）的官方继任者，自带保持 Material 外观的 classic 主题变体。
+zensical

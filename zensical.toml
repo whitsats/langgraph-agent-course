@@ -1,0 +1,98 @@
+# 讲义站点（GitHub Pages）
+#
+# 生成器用 Zensical —— Material for MkDocs 的官方继任者（同一团队，squidfunk）。
+# 换掉 mkdocs-material 的原因：它已定于 2026-11-05 EOL，9.7.0 是最后一版；
+# 底层 MkDocs 1.x 自 2024 年 8 月起无人维护；且 MkDocs 2.0 明确「没有迁移路径」。
+# 详见 https://squidfunk.github.io/mkdocs-material/blog/2026/02/18/mkdocs-2.0/
+#
+# docs_dir 指向 site-src/ —— 那是构建时拼出来的临时目录，不是仓库里的源文件。
+# 所以动手前必须先跑拼装脚本：
+#
+#   uv run python tools/build_site.py
+#   uvx --with-requirements requirements-docs.txt zensical serve    # 本地预览
+#   uvx --with-requirements requirements-docs.txt zensical build --strict
+#
+# ⚠️ docs_dir 不能写成点开头的目录（如 .site-src）：Zensical 会跳过隐藏目录，
+#    结果构建“成功”、产出 0 页、而且一句警告都不报。实测踩过，别改回去。
+#
+# CI 在推送到 main 时做同样的事并部署，见 .github/workflows/docs.yml。
+
+[project]
+site_name = "LangChain + LangGraph 智能体开发教程"
+site_description = "写给有编程经验、但没做过智能体的人 —— 14 章讲义 + 14 个可直接运行的示例"
+site_url = "https://whitsats.github.io/langgraph-agent-course/"
+repo_url = "https://github.com/whitsats/langgraph-agent-course"
+repo_name = "whitsats/langgraph-agent-course"
+
+docs_dir = "site-src"
+site_dir = "site-out"
+
+nav = [
+  { "开始" = "index.md" },
+  { "一 · 上手（先把东西跑起来）" = [
+      { "00 准备工作" = "00-准备工作.md" },
+      { "01 先建立心智模型" = "01-先建立心智模型.md" },
+      { "02 第一次跑通一个智能体" = "02-第一次跑通.md" },
+      { "03 手写智能体循环 ★" = "03-手写智能体循环.md" },
+      { "04 工具设计与可靠交付" = "04-工具与可靠交付.md" },
+  ] },
+  { "二 · 把流程变可控（LangGraph）" = [
+      { "05 状态、reducer 与条件边 ★" = "05-状态与条件边.md" },
+      { "06 状态落库与记忆 ★" = "06-状态落库与记忆.md" },
+      { "07 把人类放回流程" = "07-人工审批.md" },
+  ] },
+  { "三 · 给它知识和外部能力" = [
+      { "08 RAG：先决定要不要知识库" = "08-RAG决策.md" },
+      { "09 向量库与检索质量" = "09-向量库与检索质量.md" },
+      { "10 MCP 与能力扩展" = "10-MCP与能力扩展.md" },
+  ] },
+  { "四 · 做成能交付的东西" = [
+      { "11 工程化 ★" = "11-工程化.md" },
+      { "12 精读一个完整小项目" = "12-精读小项目.md" },
+      { "13 毕业项目：重写真实链路" = "13-毕业项目.md" },
+      { "14 附录：API 速查与排错" = "14-附录.md" },
+  ] },
+  { "参考" = [
+      { "学习计划（时间与取舍）" = "learning-plan.md" },
+      { "示例索引（可直接跑）" = "examples.md" },
+  ] },
+]
+
+[project.theme]
+# classic = 保留 Material for MkDocs 的外观（Zensical 自带的主题变体）
+variant = "classic"
+language = "zh"
+features = [
+  "navigation.tracking",
+  "navigation.top",
+  "navigation.footer",
+  "content.code.copy",
+  "content.tooltips",
+  "search.highlight",
+]
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+toggle.icon = "lucide/sun"
+toggle.name = "切到深色"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+toggle.icon = "lucide/moon"
+toggle.name = "切到浅色"
+
+[project.markdown_extensions]
+admonition = {}
+attr_list = {}
+def_list = {}
+footnotes = {}
+md_in_html = {}
+tables = {}
+toc.permalink = true
+pymdownx.details = {}
+pymdownx.highlight = {}
+pymdownx.inlinehilite = {}
+pymdownx.superfences = {}
+pymdownx.tasklist.custom_checkbox = true

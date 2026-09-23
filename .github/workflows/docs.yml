@@ -1,0 +1,60 @@
+name: docs
+
+# 推送到 main 时重建讲义站点，部署到 GitHub Pages。
+# 只碰讲义相关文件才触发 —— 改示例代码本身不该重发站点。
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tutorial/**"
+      - "examples/README.md"
+      - "LEARNING_PLAN.md"
+      - "zensical.toml"
+      - "requirements-docs.txt"
+      - "tools/build_site.py"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+# 部署 Pages 需要这三个权限，缺一不可
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时间只允许一个部署在跑，但不要打断正在进行的部署
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/configure-pages@v6
+      - uses: actions/checkout@v7
+
+      - name: 安装 uv（为了拿到 uvx）
+        uses: astral-sh/setup-uv@v10
+
+      # 纯标准库脚本，用 runner 自带的 python3 跑就够，不必装任何依赖
+      - name: 拼装站点源文件
+        run: python3 tools/build_site.py
+
+      # zensical 装在 uvx 的隔离环境里，不会往 runner 上装一堆无关的包
+      # --strict：把失效链接当成错误。讲义链接指向不存在的章节时，构建直接红
+      - name: 构建站点
+        run: uvx --with-requirements requirements-docs.txt zensical build --strict --clean
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site-out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

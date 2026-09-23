@@ -29,3 +29,7 @@ package = false
 name = "pypi"
 url = "https://pypi.org/simple"
 default = true
+
+# 注：讲义站点的构建工具不在这里，而在 requirements-docs.txt。
+# zensical 是个 CLI 工具而不是本项目的库依赖，用 uvx 隔离运行，免得碰根目录的 .venv：
+#   uv run python tools/build_site.py && uvx --with-requirements requirements-docs.txt zensical serve
