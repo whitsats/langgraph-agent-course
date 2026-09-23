@@ -16,7 +16,7 @@ dist/
 build/
 
 # ── 运行生成物（重跑例子会自己生成）────────────────────────────
-# 02_persistence_resume.py 的 SQLite checkpoint 库
+# 06a_persistence_resume.py 的 SQLite checkpoint 库
 examples/checkpoints.db
 examples/checkpoints.db-*
 *.sqlite

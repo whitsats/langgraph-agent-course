@@ -3,7 +3,7 @@
     uv run python examples/run_all.py              # 先跑离线组，再跑需要 Key 的组
     uv run python examples/run_all.py --offline    # 只跑不需要 Key 的
     uv run python examples/run_all.py --live       # 只跑需要 Key 的
-    uv run python examples/run_all.py --only 09    # 只跑编号以 09 开头的
+    uv run python examples/run_all.py --only 06    # 只跑第 06 章那一组（06a/06b/06c 全跑）
 
 每个例子都是独立子进程，互不影响；失败的会打印末尾输出，方便你直接定位。
 """
@@ -20,25 +20,25 @@ import _shared  # noqa: F401  （导入时会把 Windows 控制台切到 UTF-8�
 HERE = Path(__file__).parent
 CHECKPOINT_DB = HERE / "checkpoints.db"
 
-# (脚本, 命令行参数) —— 02 需要跑两次才能演示"跨进程恢复"
+# (脚本, 命令行参数) —— 06a 需要跑两次才能演示"跨进程恢复"
 OFFLINE = [
-    ("01_graph_basics.py", None),
-    ("02_persistence_resume.py", "first"),
-    ("02_persistence_resume.py", "second"),
-    ("03_human_approval_offline.py", None),
-    ("04_index_offline.py", None),
+    ("05_graph_basics.py", None),
+    ("06a_persistence_resume.py", "first"),
+    ("06a_persistence_resume.py", "second"),
+    ("07a_human_approval_offline.py", None),
+    ("08a_index_offline.py", None),
 ]
 
 LIVE = [
-    ("05_hello_agent.py", None),
-    ("06_handwritten_loop.py", None),
-    ("07_structured_output.py", None),
-    ("08_memory_agent.py", None),
-    ("09_rag_agent.py", None),
-    ("10_hitl_graph.py", None),
-    ("11_mcp_docs_server.py", None),
+    ("02_hello_agent.py", None),
+    ("03_handwritten_loop.py", None),
+    ("04_structured_output.py", None),
+    ("06b_memory_agent.py", None),
+    ("06c_long_term_memory.py", None),
+    ("07b_hitl_graph.py", None),
+    ("08b_rag_agent.py", None),
+    ("10_mcp_docs_server.py", None),
     ("12_mini_project_coffee_shop.py", None),
-    ("13_long_term_memory.py", None),
 ]
 
 
@@ -131,7 +131,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--offline", action="store_true", help="只跑不需要 Key 的例子")
     parser.add_argument("--live", action="store_true", help="只跑需要 Key 的例子")
-    parser.add_argument("--only", default=None, help="只跑编号匹配的例子，如 09")
+    parser.add_argument("--only", default=None, help="只跑章号匹配的那一组，如 06 会跑 06a/06b/06c")
     args = parser.parse_args()
 
     if not (args.offline or args.live or args.only):
@@ -142,7 +142,7 @@ def main() -> None:
     if args.only:
         cases = [(s, a) for s, a in OFFLINE + LIVE if s.startswith(args.only)]
         if not cases:
-            print(f"没找到编号以 {args.only} 开头的例子")
+            print(f"没找到章号以 {args.only} 开头的例子")
             return
         run_group(f"只跑 {args.only}", cases, results)
     else:

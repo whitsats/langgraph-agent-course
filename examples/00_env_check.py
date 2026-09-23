@@ -102,7 +102,7 @@ def live_check() -> None:
         if calls:
             print(f"  ✅ 会调用工具（{elapsed:.1f}s）")
             print(f"     模型要求调用: {calls[0]['name']}({calls[0]['args']})")
-            print("\n  可以开始学了：uv run python examples/05_hello_agent.py")
+            print("\n  可以开始学了：uv run python examples/02_hello_agent.py")
         else:
             print(f"  ❌ 没有发起工具调用（{elapsed:.1f}s）——这个模型做不了智能体")
             print(f"     模型原话: {str(ai.content)[:150]}")

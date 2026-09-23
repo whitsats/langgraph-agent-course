@@ -1,7 +1,7 @@
-"""05 — 最小的智能体（需要 Key）
+"""02 — 最小的智能体（需要 Key）
 
 不到 15 行，一个能干活的智能体。
-先跑通这个，再去看它内部怎么转（下一个例子 06）。
+先跑通这个，再去看它内部怎么转（下一个例子 03）。
 
 运行前：cp .env.example .env 并填好 Key（或设置 MODEL / MODEL_BASE_URL / MODEL_API_KEY）
 """
@@ -52,7 +52,7 @@ def main() -> None:
         tool_calls = getattr(msg, "tool_calls", None)
         print(f"  [{i}] {kind:<14} {str(tool_calls) if tool_calls else (msg.content or '')[:60]}")
 
-    print("\n接下来：examples/06_handwritten_loop.py 会把这条轨迹手工走一遍。")
+    print("\n接下来：examples/03_handwritten_loop.py 会把这条轨迹手工走一遍。")
 
 
 if __name__ == "__main__":

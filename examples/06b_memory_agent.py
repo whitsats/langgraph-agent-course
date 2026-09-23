@@ -1,4 +1,4 @@
-"""08 — 短期记忆：让 agent 记住上下文（需要 Key）
+"""06b — 短期记忆：让 agent 记住上下文（需要 Key）
 
 agent 本身不记得任何东西。"记忆"是基础设施：状态被存进 checkpointer，
 用 thread_id 区分不同的会话。

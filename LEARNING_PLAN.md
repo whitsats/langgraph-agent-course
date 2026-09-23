@@ -783,13 +783,13 @@ uv venv && uv add langgraph langchain-core langchain-text-splitters langgraph-ch
 uv run python examples/00_env_check.py
 ```
 
-| 文件 | 对应概念（本计划节号） | 观察点 |
-|---|---|---|
-| `00_env_check.py` | 环境基线（§15） | 你装的版本 + 新版 API 是否存在 |
-| `01_graph_basics.py` | reducer / 条件边（§7.1） | 覆盖 vs 累加 vs `Overwrite` 的差别；路由函数怎么写 |
-| `02_persistence_resume.py` | 状态数据库（§7.2） | **分两次运行**：关掉进程后状态还在（真落盘） |
-| `03_human_approval_offline.py` | 人工中断（§7.4） | 程序停半路等人回答；恢复时节点从头重跑 |
-| `04_index_offline.py` | 索引 / 过滤（§8.3–8.5） | 切分、元数据过滤、同 id 覆盖、删除——不花钱 |
+| 文件 | 讲义章 | 对应概念（本计划节号） | 观察点 |
+|---|---|---|---|
+| `00_env_check.py` | 00 | 环境基线（§15） | 你装的版本 + 新版 API 是否存在 |
+| `05_graph_basics.py` | 05 | reducer / 条件边（§7.1） | 覆盖 vs 累加 vs `Overwrite` 的差别；路由函数怎么写 |
+| `06a_persistence_resume.py` | 06 | 状态数据库（§7.2） | **分两次运行**：关掉进程后状态还在（真落盘） |
+| `07a_human_approval_offline.py` | 07 | 人工中断（§7.4） | 程序停半路等人回答；恢复时节点从头重跑 |
+| `08a_index_offline.py` | 08 / 09 | 索引 / 过滤（§8.3–8.5） | 切分、元数据过滤、同 id 覆盖、删除——不花钱 |
 
 ### 16.2 再跑这些：需要一个模型 Key
 
@@ -797,27 +797,27 @@ uv run python examples/00_env_check.py
 uv sync                                      # 依赖已在根目录 pyproject.toml 里写好了
 cp examples/.env.example examples/.env      # 填 AGNES_API_KEY=...
 uv run python examples/00_env_check.py --live   # 先确认会调工具
-uv run python examples/05_hello_agent.py
+uv run python examples/02_hello_agent.py
 ```
 
-| 文件 | 对应概念 | 观察点 |
-|---|---|---|
-| `05_hello_agent.py` | create_agent（§5） | 15 行就能干活；打印消息轨迹看它做了什么决定 |
-| `06_handwritten_loop.py` | **手写 loop（§6.1）** | 框架到底替你兜了什么 |
-| `07_structured_output.py` | 结构化输出（§6.3） | 口语下单 → Pydantic 对象，告别正则 |
-| `08_memory_agent.py` | 短期记忆（§7.2–7.3） | 换 `thread_id` 立刻失忆 = 多用户隔离 |
-| `09_rag_agent.py` | RAG（§8.6） | 知识库没有的问题，它该说不知道而不是编 |
-| `10_hitl_graph.py` | 图 + 人工审批（§7.4） | 小额自动、大额挂起等人点头 |
-| `11_mcp_docs_server.py` | MCP（§9.1） | 不写工具，直接接官方文档 server |
-| `12_mini_project_coffee_shop.py` | **完整小项目** | 状态机 + 结构化输出 + 知识 + 人工 + 记忆拼在一起 |
-| `13_long_term_memory.py` | **长期记忆（Store）**（§7.3） | 先看 Store 四个动作；再看 agent 换 thread 后依然记得同一个人 |
+| 文件 | 讲义章 | 对应概念 | 观察点 |
+|---|---|---|---|
+| `02_hello_agent.py` | 02 | create_agent（§5） | 15 行就能干活；打印消息轨迹看它做了什么决定 |
+| `03_handwritten_loop.py` | 03 | **手写 loop（§6.1）** | 框架到底替你兜了什么 |
+| `04_structured_output.py` | 04 | 结构化输出（§6.3） | 口语下单 → Pydantic 对象，告别正则 |
+| `06b_memory_agent.py` | 06 | 短期记忆（§7.2–7.3） | 换 `thread_id` 立刻失忆 = 多用户隔离 |
+| `06c_long_term_memory.py` | 06 | **长期记忆（Store）**（§7.3） | 先看 Store 四个动作；再看 agent 换 thread 后依然记得同一个人 |
+| `07b_hitl_graph.py` | 07 | 图 + 人工审批（§7.4） | 小额自动、大额挂起等人点头 |
+| `08b_rag_agent.py` | 08 | RAG（§8.6） | 知识库没有的问题，它该说不知道而不是编 |
+| `10_mcp_docs_server.py` | 10 | MCP（§9.1） | 不写工具，直接接官方文档 server |
+| `12_mini_project_coffee_shop.py` | 12 | **完整小项目** | 状态机 + 结构化输出 + 知识 + 人工 + 记忆拼在一起 |
 
 一键全跑（跑完给结果表，改动后重跑等于回归测试）：
 
 ```bash
 uv run python examples/run_all.py            # 两组都跑
 uv run python examples/run_all.py --offline  # 只跑离线组
-uv run python examples/run_all.py --only 09  # 只跑某一个
+uv run python examples/run_all.py --only 06  # 只跑第 06 章那一组（06a/06b/06c）
 ```
 
 ### 16.3 关于示例的说明
@@ -826,7 +826,7 @@ uv run python examples/run_all.py --only 09  # 只跑某一个
 - 所有“需要 Key”的例子都从环境变量读模型配置，**换任何 OpenAI 兼容网关都不用改代码**（`MODEL` / `MODEL_BASE_URL` / `MODEL_API_KEY`）。
 - 示例刻意避开“抓博客做 RAG”那种一上来就复杂的东西，用咖啡店规则、订单审核这类日常场景。
 - `12_mini_project_coffee_shop.py` 是毕业项目之前的热身：它已经具备一个可交付小项目的骨架，只缺持久化、评测与 trace。
-- `13_long_term_memory.py` 专门补上第 5 项打卡内容（记忆）：Store 的基本动作 + agent 跨 thread 记住同一个用户。
+- `06c_long_term_memory.py` 专门补上第 5 项打卡内容（记忆）：Store 的基本动作 + agent 跨 thread 记住同一个用户。
 
 ---
 

@@ -6,7 +6,7 @@
 2. 认清 RAG 不是一条流水线，而是**"给 agent 接一个检索工具"**
 3. 亲手做出一个"知识库里没有就说不知道"的 agent，并知道怎么测它
 
-**配套例子**：`examples/09_rag_agent.py`（需要 Key）、`examples/04_index_offline.py`（离线）
+**配套例子**：`examples/08b_rag_agent.py`（需要 Key）、`examples/08a_index_offline.py`（离线）
 
 ---
 
@@ -48,7 +48,7 @@ RULES = """
 | **Agentic RAG** | 模型**自己决定**要不要查、查什么 | 灵活、延迟不定 | 需要多轮查、需要组合工具 |
 | **Hybrid RAG** | 固定链路 + 查询改写 / 结果校验 | 平衡 | 检索质量不够、问题表达模糊 |
 
-**一句核心认知**：今天做 RAG ≈ **给 agent 一个"能查外部资料"的工具**。所以"RAG"和"工具调用"不是两件事——`09_rag_agent.py` 就 10 行把这个说清了：
+**一句核心认知**：今天做 RAG ≈ **给 agent 一个"能查外部资料"的工具**。所以"RAG"和"工具调用"不是两件事——`08b_rag_agent.py` 就 10 行把这个说清了：
 
 ```python
 @tool
@@ -68,7 +68,7 @@ def search_rules(query: str) -> str:
 
 ```bash
 cd examples
-uv run python 09_rag_agent.py
+uv run python 08b_rag_agent.py
 ```
 
 例子会问三个问题，**第三个才是重点**：

@@ -1,4 +1,4 @@
-"""09 — RAG：给 agent 一个能查内部资料的检索工具（需要 Key）
+"""08b — RAG：给 agent 一个能查内部资料的检索工具（需要 Key）
 
 这是最容易理解的一种 RAG（官方叫 2-Step 的变体 / Agentic RAG）：
    把检索包装成一个工具，让模型自己决定要不要查。
@@ -93,7 +93,7 @@ def main() -> None:
 
     title("下一步可以做什么")
     print("  1. 换成生产向量库：pgvector（Postgres 扩展）/ Chroma / Qdrant")
-    print("  2. 加元数据过滤，做多租户隔离（见 04_index_offline.py）")
+    print("  2. 加元数据过滤，做多租户隔离（见 08a_index_offline.py）")
     print("  3. 检索质量不够时：先加 MMR，再加混合检索与重排（Rerank）")
     print("  4. 让模型自己决定改不改写问题再查 → 就是官方说的 Hybrid RAG")
     print("\n  灌数据的脚本要单独可重跑，别写在 agent 里。")

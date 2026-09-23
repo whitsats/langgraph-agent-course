@@ -1,10 +1,10 @@
-"""02 — 用 SQLite 真正落盘 + thread_id 续跑（离线可跑，不需要 Key）
+"""06a — 用 SQLite 真正落盘 + thread_id 续跑（离线可跑，不需要 Key）
 
 这个例子要你【分两次运行】，才能看到"状态真的存到磁盘了"：
 
-    uv run python examples/02_persistence_resume.py first
+    uv run python examples/06a_persistence_resume.py first
     # 关掉终端、甚至重启电脑都行
-    uv run python examples/02_persistence_resume.py second
+    uv run python examples/06a_persistence_resume.py second
 
 第二次会从数据库里把状态读回来，继续往下走。
 这就是"断点续跑"，也是为什么你不用再自己搭一套 Redis 任务队列。
@@ -51,7 +51,7 @@ def build_graph(checkpointer):
 def main() -> None:
     step = sys.argv[1] if len(sys.argv) > 1 else "first"
     if step not in ("first", "second"):
-        print("用法：python 02_persistence_resume.py [first|second]")
+        print("用法：python 06a_persistence_resume.py [first|second]")
         sys.exit(1)
 
     # with 会自动开关连接。生产环境把这一行换成 PostgresSaver 即可（API 一样）：
@@ -66,7 +66,7 @@ def main() -> None:
             graph.invoke({"name": "小明", "visits": 0}, config)
             print(f"\n已写入数据库：{DB_PATH}")
             print("现在把进程关掉，再执行：")
-            print("  uv run python examples/02_persistence_resume.py second")
+            print("  uv run python examples/06a_persistence_resume.py second")
         else:
             print("【第二次运行】读取上次留下的状态")
             snapshot = graph.get_state(config)

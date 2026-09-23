@@ -26,8 +26,8 @@ uv run python examples/run_all.py
 环境建在**仓库根目录的 `.venv`**，所以两种写法都能跑：
 
 ```bash
-uv run python examples/01_graph_basics.py    # 从根目录
-cd examples && uv run python 01_graph_basics.py   # 从 examples/（uv 会自动往上找）
+uv run python examples/05_graph_basics.py    # 从根目录
+cd examples && uv run python 05_graph_basics.py   # 从 examples/（uv 会自动往上找）
 ```
 
 （根目录的 `.venv` 与 `virtual_rnd_center/` 自己的环境互不干扰。）
@@ -47,29 +47,36 @@ cd examples && uv run python 01_graph_basics.py   # 从 examples/（uv 会自动
 
 ---
 
+## 命名规则：文件名开头的数字 = 讲义章号
+
+`05_graph_basics.py` 就是**第 05 章**的配套例子 —— 读到哪一章，就跑哪个数字开头的文件，不用查表。
+
+同一章需要多个例子时用 `a`/`b`/`c` 区分（第 06 章要三个：`06a` 落库、`06b` 短期记忆、`06c` 长期记忆）。
+几个章号没有对应文件，那是故意的：**01** 只有讲义没有例子，**11** 直接用 `run_all.py` 当回归测试，**13** 用的是 `../virtual_rnd_center/`，**09** 复用 `08a_index_offline.py`（都是索引与检索那些动作）。
+
 ## 第一组：不需要 Key（离线可跑）
 
-| 文件 | 讲什么 | 观察什么 |
-|---|---|---|
-| `00_env_check.py` | 环境自检 | 版本 + 核心 API 是否可用（加 `--live` 会真调一次模型） |
-| `01_graph_basics.py` | reducer（覆盖 / 累加 / 清空）+ 条件边 | 同一份状态，三种写法结果完全不同 |
-| `02_persistence_resume.py` | SQLite 落盘 + `thread_id` | **分两次运行**：关掉进程，状态还在 |
-| `03_human_approval_offline.py` | `interrupt()` 暂停 + `Command(resume=)` | 程序停在半路等人点头；恢复时节点从头重跑 |
-| `04_index_offline.py` | 切分 / 元数据过滤 / 同 id 覆盖 / 删除 | 不花钱就能把知识库的索引动作全测一遍 |
+| 文件 | 讲义章 | 讲什么 | 观察什么 |
+|---|---|---|---|
+| `00_env_check.py` | 00 | 环境自检 | 版本 + 核心 API 是否可用（加 `--live` 会真调一次模型） |
+| `05_graph_basics.py` | 05 | reducer（覆盖 / 累加 / 清空）+ 条件边 | 同一份状态，三种写法结果完全不同 |
+| `06a_persistence_resume.py` | 06 | SQLite 落盘 + `thread_id` | **分两次运行**：关掉进程，状态还在 |
+| `07a_human_approval_offline.py` | 07 | `interrupt()` 暂停 + `Command(resume=)` | 程序停在半路等人点头；恢复时节点从头重跑 |
+| `08a_index_offline.py` | 08 / 09 | 切分 / 元数据过滤 / 同 id 覆盖 / 删除 | 不花钱就能把知识库的索引动作全测一遍 |
 
 ## 第二组：需要 Key
 
-| 文件 | 讲什么 | 观察什么 |
-|---|---|---|
-| `05_hello_agent.py` | `create_agent` 最小用法 | 15 行就干活；打印消息轨迹看它做了什么决定 |
-| `06_handwritten_loop.py` | **手写 agent loop** ★ | 框架到底替你兜了什么 |
-| `07_structured_output.py` | 结构化输出 | 口语下单 → Pydantic 对象，告别正则 |
-| `08_memory_agent.py` | 短期记忆 | 换个 `thread_id` 立刻失忆 = 多用户隔离的原理 |
-| `09_rag_agent.py` | 小知识库 + 检索工具 | 知识库里没有的问题，它该说"不知道"而不是编 |
-| `10_hitl_graph.py` | 图 + 人工审批 | 小额自动、大额挂起等人点头 |
-| `11_mcp_docs_server.py` | `MCPAdapter` 接官方文档 server | 不写工具也能有工具 |
-| `12_mini_project_coffee_shop.py` | **完整小项目** | 状态机 + 结构化输出 + 知识 + 人工 + 记忆拼在一起 |
-| `13_long_term_memory.py` | **长期记忆（Store）** | 先看 Store 四个动作（不需要模型）；再看 agent 换 thread 后依然记得同一个人 |
+| 文件 | 讲义章 | 讲什么 | 观察什么 |
+|---|---|---|---|
+| `02_hello_agent.py` | 02 | `create_agent` 最小用法 | 15 行就干活；打印消息轨迹看它做了什么决定 |
+| `03_handwritten_loop.py` | 03 | **手写 agent loop** ★ | 框架到底替你兜了什么 |
+| `04_structured_output.py` | 04 | 结构化输出 | 口语下单 → Pydantic 对象，告别正则 |
+| `06b_memory_agent.py` | 06 | 短期记忆 | 换个 `thread_id` 立刻失忆 = 多用户隔离的原理 |
+| `06c_long_term_memory.py` | 06 | **长期记忆（Store）** | 先看 Store 四个动作（不需要模型）；再看 agent 换 thread 后依然记得同一个人 |
+| `07b_hitl_graph.py` | 07 | 图 + 人工审批 | 小额自动、大额挂起等人点头 |
+| `08b_rag_agent.py` | 08 | 小知识库 + 检索工具 | 知识库里没有的问题，它该说"不知道"而不是编 |
+| `10_mcp_docs_server.py` | 10 | `MCPAdapter` 接官方文档 server | 不写工具也能有工具 |
+| `12_mini_project_coffee_shop.py` | 12 | **完整小项目** | 状态机 + 结构化输出 + 知识 + 人工 + 记忆拼在一起 |
 
 ---
 
@@ -92,7 +99,7 @@ cd examples && uv run python 01_graph_basics.py   # 从 examples/（uv 会自动
 uv run python examples/run_all.py              # 两组都跑
 uv run python examples/run_all.py --offline    # 只跑离线组
 uv run python examples/run_all.py --live       # 只跑需要 Key 的组
-uv run python examples/run_all.py --only 09    # 只跑某一个
+uv run python examples/run_all.py --only 06    # 只跑第 06 章那一组（06a/06b/06c）
 ```
 
 跑完给一张结果表；失败的会打印末尾报错。改动例子后建议重跑一遍，当作回归测试。
@@ -107,20 +114,20 @@ uv run python examples/run_all.py --only 09    # 只跑某一个
 **最新一次（2026-09-23，`agnes-2.5-flash`）—— 14/14 通过：**
 
 ```
-  ✅ 01_graph_basics.py                 1.0s
-  ✅ 02_persistence_resume.py first     1.0s
-  ✅ 02_persistence_resume.py second    1.0s
-  ✅ 03_human_approval_offline.py       1.0s
-  ✅ 04_index_offline.py                0.8s
-  ✅ 05_hello_agent.py                  6.5s
-  ✅ 06_handwritten_loop.py             4.1s
-  ✅ 07_structured_output.py            4.1s
-  ✅ 08_memory_agent.py                 3.8s
-  ✅ 09_rag_agent.py                   55.8s
-  ✅ 10_hitl_graph.py                   5.1s
-  ✅ 11_mcp_docs_server.py             20.2s
+  ✅ 05_graph_basics.py                 1.0s
+  ✅ 06a_persistence_resume.py first     1.0s
+  ✅ 06a_persistence_resume.py second    1.0s
+  ✅ 07a_human_approval_offline.py       1.0s
+  ✅ 08a_index_offline.py                0.8s
+  ✅ 02_hello_agent.py                  6.5s
+  ✅ 03_handwritten_loop.py             4.1s
+  ✅ 04_structured_output.py            4.1s
+  ✅ 06b_memory_agent.py                 3.8s
+  ✅ 08b_rag_agent.py                   55.8s
+  ✅ 07b_hitl_graph.py                   5.1s
+  ✅ 10_mcp_docs_server.py             20.2s
   ✅ 12_mini_project_coffee_shop.py     4.7s
-  ✅ 13_long_term_memory.py            17.2s   ← 撞了两次限流，等 20s + 45s 后通过
+  ✅ 06c_long_term_memory.py            17.2s   ← 撞了两次限流，等 20s + 45s 后通过
 
   通过 14/14
 ```
@@ -135,22 +142,22 @@ uv run python examples/run_all.py --only 09    # 只跑某一个
 
 ```
 第一组：不需要 Key（离线）
-  ✅ 01_graph_basics.py                1.1s
-  ✅ 02_persistence_resume.py first    1.0s
-  ✅ 02_persistence_resume.py second   1.1s
-  ✅ 03_human_approval_offline.py      1.0s
-  ✅ 04_index_offline.py               0.9s
+  ✅ 05_graph_basics.py                1.1s
+  ✅ 06a_persistence_resume.py first    1.0s
+  ✅ 06a_persistence_resume.py second   1.1s
+  ✅ 07a_human_approval_offline.py      1.0s
+  ✅ 08a_index_offline.py               0.9s
 
 第二组：需要 Key
-  ✅ 05_hello_agent.py                13.4s
-  ✅ 06_handwritten_loop.py            7.7s
-  ✅ 07_structured_output.py          10.8s
-  ✅ 08_memory_agent.py               10.5s
-  ✅ 09_rag_agent.py                  69.5s
-  ✅ 10_hitl_graph.py                  8.9s
-  ✅ 11_mcp_docs_server.py            52.7s
+  ✅ 02_hello_agent.py                13.4s
+  ✅ 03_handwritten_loop.py            7.7s
+  ✅ 04_structured_output.py          10.8s
+  ✅ 06b_memory_agent.py               10.5s
+  ✅ 08b_rag_agent.py                  69.5s
+  ✅ 07b_hitl_graph.py                  8.9s
+  ✅ 10_mcp_docs_server.py            52.7s
   ✅ 12_mini_project_coffee_shop.py   13.4s
-  ✅ 13_long_term_memory.py           （Store 那半不需要 Key；agent 那半实测会跨 thread 找回记忆）
+  ✅ 06c_long_term_memory.py           （Store 那半不需要 Key；agent 那半实测会跨 thread 找回记忆）
 
   ✅ 通过 14/14
 ```

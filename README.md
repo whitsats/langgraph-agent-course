@@ -16,7 +16,7 @@
    uv run python examples/run_all.py               # 一键全跑
    ```
 
-   > ✅ 实测状态（2026-09-22）：网关 `https://api.agnes-ai.cn/v1` 下**全部例子 14/14 通过**（离线 5 项 + 在线 9 项，`02` 跑两次）。
+   > ✅ 实测状态（2026-09-22）：网关 `https://api.agnes-ai.cn/v1` 下**全部例子 14/14 通过**（离线 5 项 + 在线 9 项，`06a` 跑两次）。
    > 先跑 `00_env_check.py --live`，看到 `✅ 会调用工具` 再往下读。若报 `401 Invalid token`，那是 **Key 的问题，不是代码问题**（排查方法见 `tutorial/README.md` 的“实测状态”节）。
 
 2. **`LEARNING_PLAN.md`** ← 时间与取舍视角的配套。开头是一张**完整度复核矩阵**（30 项能力面 × 覆盖位置 × 深度取舍），后面是 5 周核心计划 + 按需扩展：手写 Agent Loop、LangChain 模型层、LangGraph 编排、**状态数据库（checkpointer 各后端）**、记忆三型、**知识库 / RAG / 向量数据库（pgvector、元数据过滤、混合检索、重排、增量索引）**、MCP、多智能体、Deep Agents、沙箱权限、评测、前端接入、部署；最后一周用 LangGraph 重写 `virtual_rnd_center/` 的 MVP 链路。
@@ -37,12 +37,12 @@
 ├── README.md                 # 本文件：导航
 ├── pyproject.toml            # 根项目定义：教程/示例的依赖清单 + 索引源
 ├── uv.lock                   # 锁定版本（实测环境：langchain 1.4.2 / langgraph 1.2.12）
-├── examples/                 # 配套示例：每个概念一个可跑的小例子
-│   ├── README.md             #   示例索引与运行方式
-│   ├── 00–04_*.py            #   前五个不需要 Key（离线可跑）
-│   ├── 05–11_*.py            #   需要一个模型 Key
-│   ├── 12_mini_project_*.py  #   完整小项目：把零件拼成可交付形态
-│   └── 13_long_term_memory.py #   长期记忆（Store）：跨会话记住同一个人
+├── examples/                 # 配套示例：文件名开头的数字 = 讲义章号
+│   ├── README.md             #   示例索引、命名规则与运行方式
+│   ├── 00、05、06a、07a、08a   #   前五个不需要 Key（离线可跑）
+│   ├── 其余 9 个               #   需要一个模型 Key
+│   ├── 12_mini_project_coffee_shop.py  #   完整小项目：把零件拼成可交付形态
+│   └── 06c_long_term_memory.py         #   长期记忆（Store）：跨会话记住同一个人
 ├── virtual_rnd_center/       # 案例工程：用 CrewAI 写的"虚拟研发中心"
 │   ├── README.md             #   案例的真实上手说明
 │   ├── src/                  #   多智能体流程源码
