@@ -33,8 +33,11 @@ jobs:
       - uses: actions/configure-pages@v6
       - uses: actions/checkout@v7
 
+      # ⚠️ 这里是精确版本，不是 @v10 —— 该 action 不发布浮动的主版本标签
+      # （标签只有 v10.2.0 / v10.1.0 … 和少数两段式如 v7.6），写成 @v10 会直接
+      # 报 “Unable to resolve action … unable to find version v10”。实测踩过。
       - name: 安装 uv（为了拿到 uvx）
-        uses: astral-sh/setup-uv@v10
+        uses: astral-sh/setup-uv@v10.2.0
 
       # 纯标准库脚本，用 runner 自带的 python3 跑就够，不必装任何依赖
       - name: 拼装站点源文件
