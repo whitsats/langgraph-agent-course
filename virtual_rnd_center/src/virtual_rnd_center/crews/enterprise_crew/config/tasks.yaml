@@ -1,0 +1,255 @@
+# ==================================================
+# ENTERPRISE TASK SPECIFICATIONS v2.0
+# ==================================================
+# CHANGE LOG:
+# - P0-1: Removed output_file from BA-owned tasks.
+#   BA agents MUST use project_scaffolder to write files.
+# - P1-1: All downstream tasks open with mandatory read_file_content.
+#   Missing upstream files trigger fast-fail (BLOCKER), not silent fallback.
+# - P2-2: Micro-batch rule on scaffolding task.
+# ==================================================
+
+ent_research_task:
+  description: >
+    Use '{user_input}' as the research subject.
+    Read the template at 'templates/enterprise/research.tpl.md' if available.
+
+    Conduct comprehensive market research including:
+    - Competitor landscape analysis
+    - Target user demographic analysis
+    - Industry trend mapping
+    - Revenue model options
+
+    [MANDATORY LAST STEP] Call 'project_scaffolder' to write the research report.
+    Use project_root='{project_subdir}'
+    Use the file_data string format (In this specific tool, filenames MUST be relative to project_root, NO 'output/' or '{project_subdir}/' prefix):
+    ### FILE: research.md
+    ```
+    (your content here)
+    ```expected_output: >
+    Confirmation from project_scaffolder that 'research.md' was written successfully.
+  agent: pm
+
+ent_critique_task:
+  description: >
+    [MANDATORY FIRST STEP] Call 'read_file_content' to read
+    '{project_path}/research.md'.
+    If the file is missing, STOP and report: "BLOCKER: research.md not found."
+
+    Red-team audit the research report. Identify:
+    - Logical gaps and unsupported assumptions
+    - Market sizing errors
+    - Competitive risks that were underweighted
+
+    [MANDATORY LAST STEP] Call 'project_scaffolder' to write the audit report.
+    Use project_root='{project_subdir}'
+    Use the file_data string format (In this specific tool, filenames MUST be relative to project_root, NO 'output/' or '{project_subdir}/' prefix):
+    ### FILE: research_audit.md
+    ```
+    (your content here)
+    ```expected_output: >
+    Confirmation from project_scaffolder that 'research_audit.md' was written.
+  agent: nitpicker
+
+ent_decision_gate:
+  description: >
+    [MANDATORY FIRST STEP] Confirm existence and read prerequisites.
+    1. Call 'validate_checkpoint' on EXACTLY '{project_path}/research.md' (Warning: DO NOT omit 'output/' prefix).
+    2. Call 'validate_checkpoint' on EXACTLY '{project_path}/research_audit.md' (Warning: DO NOT omit 'output/' prefix).
+    3. Call 'read_file_content' on BOTH using their FULL paths.
+    If either is missing or validation fails, STOP and report BLOCKER.
+
+    Conduct a 3-5 turn binary interrogation in Chinese to confirm Enterprise scope.
+    Ask ONE binary question per turn. Wait for the user's answer each time.
+
+    [MANDATORY LAST STEP] Call 'project_scaffolder' to write the confirmed
+    strategy manifest. Use project_root='{project_subdir}'
+    Use the file_data string format (In this specific tool, filenames MUST be relative to project_root, NO 'output/' or '{project_subdir}/' prefix):
+    ### FILE: strategy_manifest.md
+    ```
+    (your content here)
+    ```expected_output: >
+    Confirmed Enterprise Strategy Manifest written via project_scaffolder.
+  agent: ba
+
+ent_prd_distill:
+  description: >
+    [MANDATORY FIRST STEP] Confirm existence and read strategy_manifest.md.
+    1. Call 'validate_checkpoint' on EXACTLY '{project_path}/strategy_manifest.md' (Warning: DO NOT omit 'output/' prefix).
+    2. Call 'read_file_content' on EXACTLY '{project_path}/strategy_manifest.md'.
+    If missing or validation fails, STOP and report BLOCKER.
+
+    Read the template at 'templates/enterprise/prd.tpl.md' if available.
+    Synthesize decisions into an Enterprise PRD in Chinese.
+
+    TEMPLATE:
+    # Enterprise Product Requirements Document
+    ## 1. Business Logic Depth
+    ## 2. Integration Constraints
+    ## 3. Compliance & Security Standards
+    ## 4. Out-of-Scope (verbatim from strategy_manifest.md)
+    ## 5. BANNED IMPLEMENTATION KEYWORDS
+    (Comma-separated list of class/function names FORBIDDEN in code)
+
+    [MANDATORY LAST STEP] Call 'project_scaffolder' to write the PRD.
+    Use project_root='{project_subdir}'
+    Use the file_data string format (In this specific tool, filenames MUST be relative to project_root, NO 'output/' or '{project_subdir}/' prefix):
+    ### FILE: requirements.md
+    ```
+    (your content here)
+    ```expected_output: >
+    Confirmation that 'requirements.md' was written via project_scaffolder.
+  agent: ba
+
+ent_arch_design:
+  description: >
+    [MANDATORY FIRST STEP] Confirm existence and read requirements.md.
+    1. Call 'validate_checkpoint' on EXACTLY '{project_path}/requirements.md' (Warning: DO NOT omit 'output/' prefix).
+    2. Call 'read_file_content' on EXACTLY '{project_path}/requirements.md'.
+    If missing or validation fails, STOP and report BLOCKER.
+
+    Call 'scope_guard_validator' on every major design section before finalising.
+
+    Read 'templates/enterprise/sad.tpl.md' if available.
+    Design the System Architecture Document (SAD).
+
+    TEMPLATE:
+    # System Architecture Document (SAD)
+    ## 1. Logical Architecture (C4 Model)
+    ## 2. Data Flow & Event Bus Model
+    ## 3. Infrastructure & Deployment Topology
+    ## 4. Security Framework
+
+    [MANDATORY LAST STEP] Call 'project_scaffolder' to write the SAD.
+    Use project_root='{project_subdir}'
+    Use the file_data string format (In this specific tool, filenames MUST be relative to project_root, NO 'output/' or '{project_subdir}/' prefix):
+    ### FILE: architecture_sad.md
+    ```
+    (your content here)
+    ```expected_output: >
+    Confirmation that 'architecture_sad.md' was written. SCOPE_OK confirmed.
+  agent: architect
+
+ent_impl_planning:
+  description: >
+    [MANDATORY FIRST STEP] Confirm existence and read prerequisites.
+    1. Call 'validate_checkpoint' on EXACTLY '{project_path}/requirements.md' (Warning: DO NOT omit 'output/' prefix).
+    2. Call 'validate_checkpoint' on EXACTLY '{project_path}/architecture_sad.md' (Warning: DO NOT omit 'output/' prefix).
+    3. Call 'read_file_content' on BOTH using their FULL paths.
+    If either is missing or validation fails, STOP and report BLOCKER.
+
+    Read 'templates/enterprise/impl_plan.tpl.md' if available.
+    Produce a Master Implementation Plan.
+
+    TEMPLATE:
+    # MASTER IMPLEMENTATION PLAN
+    ## 1. Milestone Roadmap (Gantt)
+    ## 2. File Tree & Component Ownership
+    ## 3. Resource Dependency Matrix
+
+    [MANDATORY LAST STEP] Call 'project_scaffolder' to write the plan.
+    Use project_root='{project_subdir}'
+    Use the file_data string format (In this specific tool, filenames MUST be relative to project_root, NO 'output/' or '{project_subdir}/' prefix):
+    ### FILE: implementation_plan.md
+    ```
+    (your content here)
+    ```expected_output: >
+    Confirmation that 'implementation_plan.md' was written via project_scaffolder.
+  agent: fullstack_dev
+
+ent_scaffolding_task:
+  description: >
+    [MANDATORY FIRST STEP] Confirm existence and read prerequisites.
+    1. Call 'validate_checkpoint' on EXACTLY '{project_path}/requirements.md' (Warning: DO NOT omit 'output/' prefix).
+    2. Call 'validate_checkpoint' on EXACTLY '{project_path}/architecture_sad.md' (Warning: DO NOT omit 'output/' prefix).
+    3. Call 'validate_checkpoint' on EXACTLY '{project_path}/implementation_plan.md' (Warning: DO NOT omit 'output/' prefix).
+    4. Call 'read_file_content' on ALL THREE using their FULL paths.
+    If any is missing or validation fails, STOP and report BLOCKER.
+
+    [SCOPE ENFORCEMENT] Locate 'BANNED IMPLEMENTATION KEYWORDS' in requirements.md.
+    NEVER write code containing those keywords.
+
+    [MICRO-BATCH RULE] Call 'project_scaffolder' one batch at a time,
+    max 5 files per call, keep files concise and modular (e.g. under 200 lines if possible).
+
+    After all code is written, call 'scope_guard_validator' on your complete output.
+
+    Also generate 'tech_specs.md':
+    # [STEEL_CONTRACT] TECHNICAL SPECIFICATIONS
+    ## 1. Infrastructure Matrix
+    ## 2. Data Persistence Model (ONLY approved fields)
+    ## 3. Internal API Contract
+    ## 4. Bootstrap Command
+    docker compose -f {project_path}/docker-compose.yml up -d --build
+  expected_output: >
+    All source files written via project_scaffolder. tech_specs.md confirmed.
+    scope_guard_validator returned SCOPE_OK.
+  agent: backend_dev
+
+ent_integration_debug:
+  description: >
+    [MANDATORY FIRST STEP] Confirm existence and read tech_specs.md.
+    1. Call 'validate_checkpoint' on EXACTLY '{project_path}/tech_specs.md' (Warning: DO NOT omit 'output/' prefix).
+    2. Call 'read_file_content' on EXACTLY '{project_path}/tech_specs.md'.
+    If missing or validation fails, STOP and report BLOCKER.
+
+    [DEPLOY] Call docker_mcp_controller with command='compose',
+    args={'path': '{project_path}/docker-compose.yml', 'subcommand': 'up'}.
+    COMPOSE ONLY. DO NOT use command='build' or command='run'.
+
+    [MANDATORY LAST STEP] Call 'project_scaffolder' to write the deployment report.
+    Use project_root='{project_subdir}'
+    Use the file_data string format (In this specific tool, filenames MUST be relative to project_root, NO 'output/' or '{project_subdir}/' prefix):
+    ### FILE: deployment_report.md
+    ```
+    (your content here)
+    ```TEMPLATE:
+    # INFRASTRUCTURE DEPLOYMENT AUDIT
+    ## 1. Deployment Metadata (Timestamp, Mode)
+    ## 2. Container Health Status (table from docker ps)
+    ## 3. Critical Log Analysis
+    ## 4. Deployment Verdict: [PASSED / FAILED]
+  expected_output: >
+    Confirmation that 'deployment_report.md' was written. Verdict is PASSED or FAILED.
+  agent: devops
+
+ent_qa_task:
+  description: >
+    [MANDATORY FIRST STEP] Confirm existence and read prerequisites.
+    1. Call 'validate_checkpoint' on EXACTLY '{project_path}/tech_specs.md' (Warning: DO NOT omit 'output/' prefix).
+    2. Call 'validate_checkpoint' on EXACTLY '{project_path}/deployment_report.md' (Warning: DO NOT omit 'output/' prefix).
+    3. Call 'read_file_content' on BOTH using their FULL paths.
+    If either is missing or validation fails, STOP and report BLOCKER.
+
+    Test all API endpoints. Execute via docker_mcp_controller exec. [QA TOOLING RULE] You MUST use 'curl' for testing endpoints (e.g., 'curl -s http://localhost:8000/api/...'). DO NOT write or execute python scripts/one-liners for testing.
+
+    [MANDATORY LAST STEP] Write 'qa_report.md' via project_scaffolder.
+    Then call docker_mcp_controller command='compose' subcommand='down' to clean up.
+
+    TEMPLATE:
+    # QUALITY ASSURANCE ACCEPTANCE REPORT
+    ## 1. Test Environment Snapshot
+    ## 2. Functional Verification Matrix
+    | Case ID | Feature | Result | Notes |
+    ## 3. Edge Case & Logic Audit
+    ## 4. Final Sign-off: [APPROVED / REJECTED]
+  expected_output: >
+    Confirmation that 'qa_report.md' was written. Containers confirmed stopped.
+  agent: qa_engineer
+
+ent_code_nitpick_task:
+  description: >
+    [MANDATORY FIRST STEP] Confirm existence and read qa_report.md.
+    1. Call 'validate_checkpoint' on EXACTLY '{project_path}/qa_report.md' (Warning: DO NOT omit 'output/' prefix).
+    2. Call 'read_file_content' on EXACTLY '{project_path}/qa_report.md'.
+    If missing or validation fails, STOP and report BLOCKER.
+
+    Read all source code files via read_file_content.
+    Run 'scope_guard_validator' on the complete codebase.
+    Identify: code smells, security issues, performance bottlenecks,
+    and any remaining scope drift.
+
+    [MANDATORY LAST STEP] Write 'code_audit_final.md' via project_scaffolder.
+  expected_output: >
+    Confirmation that 'code_audit_final.md' was written. SCOPE_OK confirmed.
+  agent: nitpicker

@@ -1,0 +1,31 @@
+[project]
+name = "agents-tutorial"
+version = "0.1.0"
+description = "LangChain + LangGraph 智能体开发教程（tutorial/ + examples/）的运行环境"
+requires-python = ">=3.10"
+dependencies = [
+    "langchain>=1.4.2",
+    "langgraph>=1.2.12",
+    "langchain-openai>=1.6.3",
+    "langchain-text-splitters",
+    "langgraph-checkpoint-sqlite",
+    "langchain[mcp]",
+    "python-dotenv",
+    # numpy 是 DeterministicFakeEmbedding 的隐性依赖，
+    # langchain-core 没声明它，缺了会报 NameError: name 'np' is not defined
+    "numpy",
+]
+
+[tool.uv]
+# 这是一个「只跑脚本、不打包」的项目：examples/ 和 tutorial/ 都是脚本，不需要构建 wheel
+package = false
+
+# 显式指定索引源。
+# 原因（实测）：默认的清华镜像 https://pypi.tuna.tsinghua.edu.cn/simple 对
+# langchain 返回 403 Forbidden，uv 会报出极具误导性的
+# "langchain was not found in the package registry"。
+# 写在这里就不用每次记 --index-url 了。
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+default = true

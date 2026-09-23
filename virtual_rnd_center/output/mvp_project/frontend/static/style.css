@@ -1,0 +1,272 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+}
+
+#app {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 16px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 20px;
+}
+
+header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+#nav-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#nav-greeting {
+    font-size: 14px;
+    color: #666;
+    margin-right: 8px;
+}
+
+.btn {
+    padding: 6px 14px;
+    border: 1px solid #ccc;
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+}
+
+.btn:hover {
+    background: #f0f0f0;
+}
+
+.btn-primary {
+    background: #1a73e8;
+    color: #fff;
+    border-color: #1a73e8;
+}
+
+.btn-primary:hover {
+    background: #1557b0;
+}
+
+.page {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+#auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 360px;
+    margin: 16px auto;
+}
+
+#auth-form input {
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 15px;
+}
+
+#auth-form input:focus {
+    outline: none;
+    border-color: #1a73e8;
+}
+
+#auth-toggle {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 14px;
+}
+
+#auth-toggle a {
+    color: #1a73e8;
+    text-decoration: none;
+}
+
+.error-msg {
+    color: #d32f2f;
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+#post-form-area {
+    margin-bottom: 24px;
+}
+
+#post-input {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 15px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+#post-input:focus {
+    outline: none;
+    border-color: #1a73e8;
+}
+
+#post-form-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+}
+
+#post-char-count {
+    font-size: 12px;
+    color: #999;
+}
+
+#suggested-users {
+    margin-bottom: 20px;
+    padding: 12px;
+    background: #fafafa;
+    border-radius: 8px;
+}
+
+#suggested-users h3 {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+#suggested-list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+#suggested-list li {
+    display: inline;
+}
+
+.suggested-user-link {
+    color: #1a73e8;
+    text-decoration: none;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.suggested-user-link:hover {
+    text-decoration: underline;
+}
+
+.follow-btn-small {
+    font-size: 12px;
+    padding: 2px 10px;
+    margin-left: 4px;
+}
+
+#feed h3 {
+    font-size: 16px;
+    margin-bottom: 12px;
+}
+
+.post-card {
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.post-card:last-child {
+    border-bottom: none;
+}
+
+.post-author {
+    font-weight: 600;
+    color: #1a73e8;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.post-author:hover {
+    text-decoration: underline;
+}
+
+.post-content {
+    margin: 6px 0;
+    font-size: 15px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.post-time {
+    font-size: 12px;
+    color: #999;
+}
+
+.post-delete {
+    font-size: 12px;
+    color: #d32f2f;
+    cursor: pointer;
+    margin-left: 8px;
+    background: none;
+    border: none;
+}
+
+#feed-empty {
+    text-align: center;
+    color: #999;
+    padding: 20px;
+}
+
+#btn-load-more {
+    display: block;
+    margin: 16px auto 0;
+}
+
+#profile-header {
+    margin-bottom: 20px;
+}
+
+#profile-nickname {
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+#profile-bio {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+#profile-stats {
+    font-size: 14px;
+    color: #999;
+    margin-bottom: 12px;
+}
+
+#post-detail-content {
+    margin-top: 16px;
+}
+
+#btn-back-feed, #btn-back-from-detail {
+    margin-bottom: 16px;
+}

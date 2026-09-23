@@ -1,0 +1,238 @@
+# ==========================================
+# INDUSTRIAL-GRADE R&D TASK SPECIFICATIONS
+# ==========================================
+# CHANGE LOG (v2.0 - Stability Hardening)
+# - P0-1: Removed unreliable `output_file` from BA tasks.
+#   BA agents MUST use project_scaffolder tool to write files.
+# - P1-1: All downstream tasks start with a mandatory file-read
+#   instruction. Missing files trigger fast-fail, not silent fallback.
+# - P2-2: Micro-batch rule enforced on scaffolding tasks.
+# ==========================================
+
+# --- MVP WORKFLOW (High Velocity) ---
+
+mvp_boundary_task:
+  description: >
+    【CORE GATE】 Conduct a 3-5 turn binary interview in Chinese to define
+    the MVP boundary for the project: "{user_input}".
+
+    INTERVIEW RULES:
+    - Ask exactly ONE high-impact YES/NO question per turn.
+    - Wait for the user's answer before proceeding.
+    - After all turns, consolidate decisions.
+
+    [MANDATORY LAST STEP] After completing the interview, you MUST call
+    the 'project_scaffolder' tool to write the Boundary Manifest to disk.
+    The project_root MUST be 'mvp_project' and the file path MUST be
+    'boundary_manifest.md'. DO NOT end your task by returning text alone —
+    the file MUST be physically written via the tool.
+
+    BOUNDARY MANIFEST FORMAT:
+    # [LEAN_GATE] PROJECT BOUNDARY MANIFEST
+    ## 1. Vision Statement
+    (Core value proposition of {user_input})
+    ## 2. Stakeholder Decisions
+    - [X] IN-SCOPE: (Approved features with reason)
+    - [ ] OUT-OF-SCOPE: (Cut features with justification and BANNED KEYWORD list)
+    ## 3. Boundary Risks
+    (1-2 potential scope creep risks)
+    ## 4. BANNED IMPLEMENTATION KEYWORDS
+    (Comma-separated list of class/function names that MUST NOT appear in code)
+  expected_output: >
+    Confirmation from the project_scaffolder tool that
+    'output/mvp_project/boundary_manifest.md' was created successfully.
+    The tool response MUST contain the word 'Success'.
+  agent: ba
+
+mvp_requirements_task:
+  description: >
+    [MANDATORY FIRST STEP] Call 'read_file_content' to read
+    'output/mvp_project/boundary_manifest.md' before doing ANYTHING else.
+    If the file does not exist or returns an error, STOP IMMEDIATELY and
+    report: "BLOCKER: boundary_manifest.md not found. Cannot proceed."
+    DO NOT infer or reconstruct the boundary from memory.
+
+    Once you have read the manifest, synthesize the decisions into a
+    professional Chinese PRD.
+
+    [MANDATORY LAST STEP] Call 'project_scaffolder' to write the PRD.
+    project_root='mvp_project', file='requirements.md'.
+
+    TEMPLATE:
+    # Business Requirements Document (PRD) - MVP
+    ## 1. Product Goals & Objectives
+    ## 2. User Personas & Scenarios
+    ## 3. Functional Requirements (User Stories)
+    ## 4. Acceptance Criteria (Definition of Done)
+    ## 5. Non-Functional Requirements (Performance, Security)
+    ## 6. Out-of-Scope (copied verbatim from boundary_manifest.md)
+  expected_output: >
+    Confirmation from the project_scaffolder tool that
+    'output/mvp_project/requirements.md' was created successfully.
+  agent: ba
+
+mvp_scaffolding_task:
+  description: >
+    [MANDATORY FIRST STEP] Call 'read_file_content' to read BOTH:
+    1. 'output/mvp_project/boundary_manifest.md'
+    2. 'output/mvp_project/requirements.md'
+    If either file is missing, STOP and report a BLOCKER.
+
+    [SCOPE ENFORCEMENT] Locate the 'BANNED IMPLEMENTATION KEYWORDS' section
+    in boundary_manifest.md. You are STRICTLY FORBIDDEN from writing any
+    code that contains those keywords. This is non-negotiable.
+
+    [MICRO-BATCH RULE] Call 'project_scaffolder' one batch at a time,
+    maximum 5 files per call. Do NOT write more than 60 lines of code
+    per file in a single call. Complete all batches before finishing.
+
+    Implement ALL project source files and ALSO generate 'tech_specs.md'.
+
+    TECH SPECS TEMPLATE:
+    # [STEEL_CONTRACT] TECHNICAL SPECIFICATIONS
+    ## 1. Infrastructure Matrix
+    - PROJECT_ROOT: ./output/mvp_project
+    - COMPOSE_FILE: ./docker-compose.yml
+    - BACKEND_SERVICE: [Port] / [Name]
+    - FRONTEND_SERVICE: [Port] / [Name]
+    ## 2. Data Persistence Model
+    (Detailed Schema — ONLY fields approved in boundary_manifest.md)
+    ## 3. Internal API Contract
+    (Endpoint definitions and payloads)
+    ## 4. Bootstrap Command
+    docker compose -f output/mvp_project/docker-compose.yml up -d --build
+  expected_output: >
+    All project source files written via project_scaffolder.
+    tech_specs.md confirmed written. NO banned keywords in any file.
+  agent: fullstack_dev
+
+mvp_debug_task:
+  description: >
+    [MANDATORY FIRST STEP] Call 'read_file_content' to read
+    'output/mvp_project/tech_specs.md'.
+    If missing, STOP and report BLOCKER.
+
+    [DEPLOY] Call docker_mcp_controller with command='compose',
+    args={'path': 'output/mvp_project/docker-compose.yml', 'subcommand': 'up'}.
+    DO NOT use command='build' or command='run'. Compose ONLY.
+
+    [MANDATORY LAST STEP] Call 'project_scaffolder' to write the
+    deployment report to 'output/mvp_project/deployment_report.md'.
+
+    TEMPLATE:
+    # INFRASTRUCTURE DEPLOYMENT AUDIT
+    ## 1. Deployment Metadata
+    - Timestamp: (UTC)
+    - Mode: MVP / Compose
+    ## 2. Container Health Status
+    (Table of running containers from 'docker ps')
+    ## 3. Critical Log Analysis
+    (Summary of stdout/stderr errors found)
+    ## 4. Deployment Verdict: [PASSED / FAILED]
+  expected_output: >
+    Confirmation that 'output/mvp_project/deployment_report.md' was
+    written via project_scaffolder. Verdict must be PASSED or FAILED.
+  agent: devops
+
+mvp_qa_task:
+  description: >
+    [MANDATORY FIRST STEP] Call 'read_file_content' to read
+    'output/mvp_project/tech_specs.md' and 'output/mvp_project/deployment_report.md'.
+    If either is missing, STOP and report BLOCKER.
+
+    Test all API endpoints defined in tech_specs.md using docker_mcp_controller exec.
+
+    [MANDATORY LAST STEP] Call 'project_scaffolder' to write the QA report
+    to 'output/mvp_project/qa_report.md'.
+    Then call docker_mcp_controller with command='compose', subcommand='down' to clean up.
+
+    TEMPLATE:
+    # QUALITY ASSURANCE ACCEPTANCE REPORT
+    ## 1. Test Environment Snapshot
+    ## 2. Functional Verification Matrix
+    | Case ID | Feature | Result | Notes |
+    |---|---|---|---|
+    | UC-001 | API Ping | PASS/FAIL | ... |
+    ## 3. Edge Case & Logic Audit
+    ## 4. Final Sign-off: [APPROVED / REJECTED]
+  expected_output: >
+    Confirmation that 'output/mvp_project/qa_report.md' was written.
+    Containers confirmed stopped.
+  agent: qa_engineer
+
+# --- ENTERPRISE WORKFLOW (Milestone-Driven) ---
+
+ent_research_task:
+  description: "Market research for {user_input}."
+  expected_output: "Deep Competitor & Trend Analysis Report."
+  agent: pm
+
+ent_critique_task:
+  description: "Red-team audit of research."
+  expected_output: "Strategic Risk Audit Report."
+  agent: nitpicker
+
+ent_decision_gate:
+  description: "Binary decision gate (3-5 turns) for strategic direction."
+  expected_output: "Confirmed Enterprise Strategy Manifest."
+  agent: ba
+
+ent_prd_distill:
+  description: >
+    Finalize Enterprise PRD.
+    TEMPLATE:
+    # Enterprise Product Requirements Document
+    ## 1. Business Logic Depth
+    ## 2. Integration Constraints
+    ## 3. Compliance & Security Standards
+  expected_output: "Full Enterprise PRD."
+  agent: ba
+  output_file: output/enterprise_project/requirements_final.md
+
+ent_arch_design:
+  description: >
+    Design SAD.
+    TEMPLATE:
+    # System Architecture Document (SAD)
+    ## 1. Logical Architecture (C4 Model)
+    ## 2. Data Flow & Event Bus Model
+    ## 3. Infrastructure & Deployment Topology
+    ## 4. Security Framework
+  expected_output: "Enterprise SAD."
+  agent: architect
+  output_file: output/enterprise_project/architecture_sad.md
+
+ent_impl_planning:
+  description: >
+    Produce 'implementation_plan.md'.
+    TEMPLATE:
+    # MASTER IMPLEMENTATION PLAN
+    ## 1. Milestone Roadmap
+    ## 2. File Tree & Component Ownership
+    ## 3. Resource Dependency Matrix
+  expected_output: "Detailed Implementation Plan."
+  agent: fullstack_dev
+  output_file: output/enterprise_project/implementation_plan.md
+
+ent_scaffolding_task:
+  description: "Build based on plan. Generate full tech_specs.md."
+  expected_output: "Source code delivery."
+  agent: backend_dev
+
+ent_integration_debug:
+  description: "Full Stack Deployment Audit. Mandatory 'deployment_report.md'."
+  expected_output: "Deployment Audit."
+  agent: devops
+  output_file: output/enterprise_project/deployment_report.md
+
+ent_qa_task:
+  description: "Enterprise E2E Validation. Mandatory 'qa_report.md'."
+  expected_output: "Final QA Audit."
+  agent: qa_engineer
+  output_file: output/enterprise_project/qa_report.md
+
+ent_code_nitpick_task:
+  description: "Final Enterprise Code Audit."
+  expected_output: "Approved production-ready code."
+  agent: nitpicker
+  output_file: output/enterprise_project/code_audit_final.md

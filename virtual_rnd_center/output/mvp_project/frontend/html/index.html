@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LightQuotes - 轻语录</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div id="app">
+        <header id="header" class="hidden">
+            <h1>LightQuotes</h1>
+            <div id="header-actions">
+                <button id="btn-nav-home">Home</button>
+                <button id="btn-nav-discover">Discover</button>
+                <button id="btn-nav-profile">Profile</button>
+                <button id="btn-logout" class="btn-secondary">Logout</button>
+            </div>
+        </header>
+
+        <main>
+            <!-- Login / Register View -->
+            <section id="auth-view" class="view">
+                <div class="auth-card">
+                    <h2>LightQuotes</h2>
+                    <p class="subtitle">Share your thoughts, simply.</p>
+                    <div id="auth-tabs">
+                        <button id="tab-login" class="tab active">Login</button>
+                        <button id="tab-register" class="tab">Register</button>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form id="login-form" class="auth-form">
+                        <input type="email" id="login-email" placeholder="Email" required>
+                        <input type="password" id="login-password" placeholder="Password" required>
+                        <button type="submit">Login</button>
+                        <p id="login-error" class="error-msg"></p>
+                    </form>
+
+                    <!-- Register Form -->
+                    <form id="register-form" class="auth-form hidden">
+                        <input type="text" id="reg-username" placeholder="Username" required maxlength="50">
+                        <input type="email" id="reg-email" placeholder="Email" required>
+                        <input type="password" id="reg-password" placeholder="Password" required minlength="6">
+                        <div class="code-row">
+                            <input type="text" id="reg-code" placeholder="Verification Code" required maxlength="6">
+                            <button type="button" id="btn-send-code" class="btn-secondary">Send Code</button>
+                        </div>
+                        <button type="submit">Register</button>
+                        <p id="register-error" class="error-msg"></p>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Timeline View -->
+            <section id="timeline-view" class="view hidden">
+                <div class="create-post">
+                    <textarea id="post-content" placeholder="What's on your mind? (max 280 chars)" maxlength="280"></textarea>
+                    <div class="create-post-actions">
+                        <label class="image-upload-label">
+                            <span>+ Image</span>
+                            <input type="file" id="post-image" accept="image/jpeg,image/png" hidden>
+                        </label>
+                        <span id="char-count">0/280</span>
+                        <button id="btn-post">Post</button>
+                    </div>
+                    <p id="post-error" class="error-msg"></p>
+                </div>
+                <div id="feed"></div>
+                <div id="feed-loader" class="hidden">Loading...</div>
+                <p id="no-posts-msg" class="hidden">No posts yet. Follow some users!</p>
+            </section>
+
+            <!-- Discover View -->
+            <section id="discover-view" class="view hidden">
+                <h2>Discover Users</h2>
+                <div id="user-list"></div>
+                <p id="no-users-msg" class="hidden">No more users to discover.</p>
+            </section>
+
+            <!-- Profile View -->
+            <section id="profile-view" class="view hidden">
+                <div id="profile-header">
+                    <h2 id="profile-username"></h2>
+                    <p id="profile-bio"></p>
+                </div>
+                <h3>Posts</h3>
+                <div id="profile-posts"></div>
+                <p id="no-profile-posts" class="hidden">No posts yet.</p>
+            </section>
+        </main>
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+</html>

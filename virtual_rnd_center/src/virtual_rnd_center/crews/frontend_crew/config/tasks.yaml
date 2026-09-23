@@ -1,0 +1,107 @@
+# ==================================================
+# FRONTEND CREW TASK SPECIFICATIONS v2.0
+# ==================================================
+# CHANGE LOG:
+# - P0-1: output_file removed from all tasks; agents use project_scaffolder.
+# - P1-1: Mandatory read_file_content at start of each task (fast-fail).
+# - P0-3: scope_guard_validator call required on fe_code_task output.
+# - P2-2: Micro-batch rule on fe_code_task.
+# ==================================================
+
+fe_design_task:
+  description: >
+    [MANDATORY FIRST STEP] Call 'read_file_content' to read
+    '{project_path}/requirements.md' (or the latest available PRD).
+    If missing, STOP and report: "BLOCKER: requirements.md not found."
+
+    Read 'templates/enterprise/sad.tpl.md' if available.
+    Design the Frontend System Architecture Document.
+
+    TEMPLATE:
+    # Frontend System Architecture Document
+    ## 1. Component Hierarchy & Page Structure
+    ## 2. State Management Strategy
+    ## 3. API Integration Points (from backend tech_specs)
+    ## 4. Styling & Design System Tokens
+
+    Call 'scope_guard_validator' on your SAD before writing.
+
+    [MANDATORY LAST STEP] Write 'architecture_sad.md' via project_scaffolder.
+    Use project_root='{project_subdir}'
+    Use the file_data string format (In this specific tool, filenames MUST be relative to project_root, NO 'output/' or '{project_subdir}/' prefix):
+    ### FILE: architecture_sad.md
+    ```
+    (your content here)
+    ```expected_output: >
+    Confirmation that 'architecture_sad.md' was written. SCOPE_OK confirmed.
+  agent: architect
+
+fe_planning_task:
+  description: >
+    [MANDATORY FIRST STEP] Confirm existence and read architecture_sad.md.
+    1. Call 'validate_checkpoint' on EXACTLY '{project_path}/architecture_sad.md' (Warning: DO NOT omit 'output/' prefix).
+    2. Call 'read_file_content' on EXACTLY '{project_path}/architecture_sad.md'.
+    If missing or validation fails, STOP and report BLOCKER.
+
+    Read 'templates/enterprise/impl_plan.tpl.md' if available.
+    Produce a Frontend Implementation Plan in Chinese.
+
+    [MANDATORY LAST STEP] Write 'implementation_plan.md' via project_scaffolder.
+    Use project_root='{project_subdir}'
+    Use the file_data string format (In this specific tool, filenames MUST be relative to project_root, NO 'output/' or '{project_subdir}/' prefix):
+    ### FILE: implementation_plan.md
+    ```
+    (your content here)
+    ```expected_output: >
+    Confirmation that 'implementation_plan.md' was written.
+  agent: frontend_dev
+
+fe_code_task:
+  description: >
+    [MANDATORY FIRST STEP] Confirm existence and read prerequisites.
+    1. Call 'validate_checkpoint' on EXACTLY '{project_path}/architecture_sad.md' (Warning: DO NOT omit 'output/' prefix).
+    2. Call 'validate_checkpoint' on EXACTLY '{project_path}/implementation_plan.md' (Warning: DO NOT omit 'output/' prefix).
+    3. Call 'read_file_content' on BOTH using their FULL paths.
+    If either is missing or validation fails, STOP and report BLOCKER.
+
+    [SCOPE ENFORCEMENT] BANNED KEYWORDS (never write these in UI code):
+    UploadFile, CDN, image_url, avatar, recommendation, notification, follow.
+    Also: do NOT add any UI routes, pages, or components not listed in the SAD.
+
+    [MICRO-BATCH RULE] Call 'project_scaffolder' one batch at a time.
+    Max 5 files per call, keep files concise and modular (e.g. under 200 lines if possible).
+
+    After all files written, call 'scope_guard_validator' on your output.
+
+    Also produce 'tech_specs.md':
+    # [FRONTEND_CONTRACT] TECHNICAL SPECIFICATIONS
+    ## 1. Build & Runtime Info (Node version, framework, bundler)
+    ## 2. Component Registry (all components and their props)
+    ## 3. API Integration Map (endpoint → component mapping)
+    ## 4. Start Command
+  expected_output: >
+    All frontend source files written. tech_specs.md confirmed.
+    scope_guard_validator returned SCOPE_OK.
+  agent: frontend_dev
+
+fe_qa_task:
+  description: >
+    [MANDATORY FIRST STEP] Confirm existence and read tech_specs.md.
+    1. Call 'validate_checkpoint' on EXACTLY '{project_path}/tech_specs.md' (Warning: DO NOT omit 'output/' prefix).
+    2. Call 'read_file_content' on EXACTLY '{project_path}/tech_specs.md'.
+    If missing or validation fails, STOP and report BLOCKER.
+
+    Perform UI/UX verification testing across all pages defined in tech_specs.md.
+
+    TEMPLATE:
+    # Frontend QA Report
+    ## 1. Test Environment (browser, resolution)
+    ## 2. UI Verification Matrix
+    | Case ID | Page/Component | Action | Expected | Result | Notes |
+    ## 3. Responsive Design Checks
+    ## 4. Sign-off: [APPROVED / REJECTED]
+
+    [MANDATORY LAST STEP] Write 'qa_report.md' via project_scaffolder.
+  expected_output: >
+    Confirmation that 'qa_report.md' was written. Sign-off included.
+  agent: qa_engineer

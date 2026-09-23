@@ -1,0 +1,32 @@
+# ── 密钥：绝不入库 ─────────────────────────────────────────────
+# examples/.env 与 virtual_rnd_center/.env 里是真实 API Key，只提交 .env.example
+.env
+.env.local
+*.env
+!examples/.env.example
+
+# ── Python ────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+lib/
+dist/
+build/
+
+# ── 运行生成物（重跑例子会自己生成）────────────────────────────
+# 02_persistence_resume.py 的 SQLite checkpoint 库
+examples/checkpoints.db
+examples/checkpoints.db-*
+*.sqlite
+*.sqlite3
+
+# ── 工具本地状态 ──────────────────────────────────────────────
+.freebuff/
+
+# ── 编辑器 / 系统 ─────────────────────────────────────────────
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

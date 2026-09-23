@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>轻动 QingDong</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>轻动</h1>
+            <nav id="nav-bar">
+                <span id="nav-greeting"></span>
+                <button id="btn-login" class="btn">登录</button>
+                <button id="btn-register" class="btn">注册</button>
+                <button id="btn-logout" class="btn" style="display:none">退出</button>
+            </nav>
+        </header>
+
+        <main>
+            <div id="page-auth" class="page">
+                <h2 id="auth-title">登录</h2>
+                <form id="auth-form">
+                    <input type="text" id="auth-nickname" placeholder="昵称" style="display:none">
+                    <input type="email" id="auth-email" placeholder="邮箱" required>
+                    <input type="password" id="auth-password" placeholder="密码" required>
+                    <button type="submit" id="auth-submit" class="btn btn-primary">登录</button>
+                </form>
+                <p id="auth-toggle">
+                    <a href="#" id="auth-toggle-link">没有账号？去注册</a>
+                </p>
+                <p id="auth-error" class="error-msg"></p>
+            </div>
+
+            <div id="page-feed" class="page" style="display:none">
+                <div id="post-form-area">
+                    <textarea id="post-input" placeholder="写点什么呢..." maxlength="500"></textarea>
+                    <div id="post-form-footer">
+                        <span id="post-char-count">0/500</span>
+                        <button id="btn-post" class="btn btn-primary">发布</button>
+                    </div>
+                    <p id="post-error" class="error-msg"></p>
+                </div>
+
+                <div id="suggested-users" style="display:none">
+                    <h3>推荐关注</h3>
+                    <ul id="suggested-list"></ul>
+                </div>
+
+                <div id="feed">
+                    <h3>时间线</h3>
+                    <div id="feed-list"></div>
+                    <p id="feed-empty">暂无动态 — 去关注一些用户吧！</p>
+                    <button id="btn-load-more" class="btn" style="display:none">加载更多</button>
+                </div>
+            </div>
+
+            <div id="page-profile" class="page" style="display:none">
+                <button id="btn-back-feed" class="btn">&larr; 返回</button>
+                <div id="profile-header">
+                    <h2 id="profile-nickname"></h2>
+                    <p id="profile-bio"></p>
+                    <p id="profile-stats"></p>
+                    <button id="btn-follow" class="btn btn-primary" style="display:none">关注</button>
+                    <button id="btn-unfollow" class="btn" style="display:none">取消关注</button>
+                </div>
+                <div id="profile-posts">
+                    <h3>动态</h3>
+                    <div id="profile-posts-list"></div>
+                    <p id="profile-posts-empty">暂无动态</p>
+                </div>
+            </div>
+
+            <div id="page-post-detail" class="page" style="display:none">
+                <button id="btn-back-from-detail" class="btn">&larr; 返回</button>
+                <div id="post-detail-content"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+</html>

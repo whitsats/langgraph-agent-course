@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./backend
+    container_name: lightquotes-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - uploads_data:/app/uploads
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    environment:
+      - DATABASE_URL=sqlite:///app/data/app.db
+      - UPLOAD_DIR=/app/uploads
+      - SECRET_KEY=change-me-in-production
+      - VERIFICATION_CODE_EXPIRE_MINUTES=5
+      - MAX_LOGIN_ATTEMPTS=5
+      - LOGIN_LOCKOUT_MINUTES=15
+
+  frontend:
+    build: ./frontend
+    container_name: lightquotes-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      - ./frontend/html:/usr/share/nginx/html:ro
+
+volumes:
+  uploads_data:
