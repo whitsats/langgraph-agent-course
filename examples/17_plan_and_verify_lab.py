@@ -16,6 +16,7 @@
 run_all.py 会当场变红，不用等人盯着输出看。
 """
 
+import re
 import sys
 
 import _shared  # noqa: F401  （导入时把 Windows 控制台切到 UTF-8）
@@ -35,9 +36,6 @@ REVENUE = {
 VALID_MONTHS = sorted(REVENUE)                       # 台账里真实存在的月份
 
 REPORTS: dict[str, str] = {}                         # "报告柜"：写进去的报告
-
-TOOL_RISK = {"search_orders": "低（只读）", "revenue_by_category": "低（只读）",
-             "write_report": "高（写入）", "send_email": "高危（外发）"}
 
 
 def tool(name: str, arg: str) -> tuple[bool, str]:
@@ -74,7 +72,9 @@ TASK = "把 8 月经营情况整理成报告：查 1001 号订单、哪个品类
 
 
 def exp1_plan_vs_one_shot() -> None:
-    banner("实验 1：一口气式（ReAct 循环） vs plan-and-execute")    # —— 做法 A：一口气式。每一步都让"模型"重新看着全部对话现场发挥 ——
+    banner("实验 1：一口气式（ReAct 循环） vs plan-and-execute")
+
+    # —— 做法 A：一口气式。每一步都让"模型"重新看着全部对话现场发挥 ——
     def one_shot_decide(steps_done, results):
         # 真实 ReAct 循环里这就是模型：每步重新读全上下文再拍板。步骤一多，
         # 它会"忘"之前查过什么、算错月份——这里模拟两个最典型的退化。
@@ -260,7 +260,6 @@ def verify_candidate(candidate: str) -> tuple[bool, list[str]]:
         else:
             checks.append(f"{cat} {amt} 元：候选未提（不加分不扣分）")
     # 候选里出现的金额必须都能在台账里找到，否则视为编造
-    import re
     amounts = {str(a) for _, a in REVENUE["2026-08"]}
     for num in re.findall(r"\d{3,}", cand):
         if num in amounts or num == "2026":

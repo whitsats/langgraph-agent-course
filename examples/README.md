@@ -65,7 +65,10 @@ cd examples && uv run python 05_graph_basics.py   # 从 examples/（uv 会自动
 | `08a_index_offline.py` | 08 / 09 | 切分 / 元数据过滤 / 同 id 覆盖 / 删除 | 不花钱就能把知识库的索引动作全测一遍 |
 | `16_agent_security_lab.py` | 16 | 四个安全攻击实验（注入 / 投毒 / 权限） | ⚠️ 注入得手、✅ 补丁拦截——重点看实验 4 两种权限的两行对比 |
 | `17_plan_and_verify_lab.py` | 17 | 规划与自我验证四实验 | 一口气式的编造收尾 vs 计划被校验/修复；验证器拒绝编造的候选 |
-| `18_handoff_contract_lab.py` | 18 | 交接契约 + 通道认证四实验 | 自由文本交接丢数字；坏包死在门口；伪造/篡改/重放全被拒；带毒字段不被执行；7 条契约测试锁两端（含类型层） |
+| `18_handoff_contract_lab.py` | 18 | 交接契约 + 通道认证四实验 | 自由文本交接丢数字；坏包死在门口；伪造/篡改/重放/过期消息全被拒；带毒字段不被执行；7 条契约测试锁两端（含类型层） |
+
+> 注：`00_env_check` 是自检工具、不进回归组——所以 `run_all.py --offline` 的 8 项 =
+> 上表除 00 外的 7 个脚本 + `06a` 跑两次，两处都是"8"但口径不同。
 
 ## 第二组：需要 Key
 
@@ -125,7 +128,7 @@ uv run python examples/run_all.py --only 06    # 只跑第 06 章那一组（06a
 抓它们的办法是**变异测试**：把每个关键不变量**故意改坏**，再跑一遍示例，看它是不是真的报了错。
 
 ```bash
-uv run python examples/mutation_check.py             # 全部（15 条，秒级，不需要 Key）
+uv run python examples/mutation_check.py             # 全部（20 条，秒级，不需要 Key）
 uv run python examples/mutation_check.py --only 18   # 只查第 18 章那个实验室
 uv run python examples/mutation_check.py --list      # 只列清单，不跑
 ```
@@ -134,11 +137,14 @@ uv run python examples/mutation_check.py --list      # 只列清单，不跑
 杀死一条变异有三条途径：那句话该出现（`expect_appear`）、那句话该消失（`expect_vanish`）、
 或者**脚本自己非 0 退出**（实验室的断言就是这么报的——也是 `run_all.py` 变红的原因）。
 它还会先跑一遍原始文件做**防"假红"**校验：每条信号的方向必须刚好相反
-（该出现的原本不出现、该消失的原本在），否则报"配置问题"。
+（该出现的原本不出现、该消失的原本在），否则报"配置问题"。变异后的源码还会
+先过一遍 `compile()`——语法错误的变异（片段缩进写错之类）同样按"配置问题"处理，
+因为崩溃不是断言在咬人，不该算"杀死"。
 
-覆盖范围是**代码里强制执行的检查**：第 16 章实验 4（工具白名单 / 路径范围）、
-第 17 章（计划校验 / 重规划 / 验证器 / 断点）、第 18 章（契约四层 / 通道三件套 /
-消费者纪律 / 契约测试）。第 16 章前三个实验是**故意展示漏洞**的演示，没有该红的地方。
+覆盖范围是**代码里强制执行的检查**：第 08 章 a 的租户隔离（元数据过滤谓词）、
+第 16 章实验 4（工具白名单 / 路径范围）、第 17 章（计划校验 / 重规划 / 验证器 / 断点）、
+第 18 章（契约校验各层 / 通道三件套 / 消费者纪律 / 契约测试）。
+第 16 章前三个实验是**故意展示漏洞**的演示，没有该红的地方。
 
 > **2026-09-24 首跑：15/15 被杀死。** 但第一次跑时挂了两条——身份检查与完整性检查
 > "存活"：测试数据里那个篡改包沿用了已见过的序号，先撞上重放检查，于是把 MAC 校验
@@ -147,17 +153,52 @@ uv run python examples/mutation_check.py --list      # 只列清单，不跑
 > （把类型校验删掉，6 条用例照样全绿）——现已为它补上第 7 条用例。
 > 这道检查头两次运行都抓到真问题——这就是它存在的理由。
 >
-> 注：变异检查只覆盖**离线组**的三个实验室（秒级、不需要 Key）；在线组的 9 个例子
+> **2026-09-24 增补**：变异表扩到 **20 条**——补上 08a 租户隔离、17 幽灵工具、
+> 18 夹带过程 / 超长 / 新鲜性（其中超长与新鲜性是先给实验室补了「超长版」坏包与
+> 「⑤过期消息」用例才进表的，改坏它们原本什么都不红）。另加 `compile()` 前置校验：
+> 变异把源码改出语法错误时按"配置问题"报告，不再把崩溃误记成"杀死"。
+>
+> 注：变异检查只覆盖**离线组**的 08a 与三个实验室（秒级、不需要 Key）；在线组的 9 个例子
 > 靠 `run_all.py --live` 验证断言——每次都要真调模型，不适合逐条改坏重跑。
 
 ---
 
-## 验证状态（2026-09-23 最新实跑）
+## 验证状态（2026-09-24 最新实跑）
 
 网关 `https://api.agnes-ai.cn/v1`、模型 `agnes-2.5-flash`；Python 3.13.13 / langchain 1.4.2 / langgraph 1.2.12。
-下表耗时取自一次实测，仅作参考（随网络与服务端负载波动）。
+下表耗时取自 2026-09-24 的实测（离线组与在线组各跑了一次），仅作参考（随网络与服务端负载波动）。
 
-**最新一次（2026-09-23，`agnes-2.5-flash`）—— 14/14 通过：**
+**最新一次（2026-09-24，`agnes-2.5-flash`）—— 17/17 通过：**
+
+```
+  ✅ 05_graph_basics.py                 1.1s
+  ✅ 06a_persistence_resume.py first     1.1s
+  ✅ 06a_persistence_resume.py second    1.0s
+  ✅ 07a_human_approval_offline.py       1.0s
+  ✅ 08a_index_offline.py                0.8s
+  ✅ 16_agent_security_lab.py            0.1s
+  ✅ 17_plan_and_verify_lab.py           0.1s
+  ✅ 18_handoff_contract_lab.py          0.1s
+  ✅ 02_hello_agent.py                  27.3s
+  ✅ 03_handwritten_loop.py             30.1s
+  ✅ 04_structured_output.py             4.4s
+  ✅ 06b_memory_agent.py                17.4s
+  ✅ 06c_long_term_memory.py            28.1s
+  ✅ 07b_hitl_graph.py                   6.1s
+  ✅ 08b_rag_agent.py                   68.3s   ← 中途撞了限流，等 20s + 45s 后通过
+  ✅ 10_mcp_docs_server.py              22.5s
+  ✅ 12_mini_project_coffee_shop.py     11.4s
+
+  通过 17/17
+```
+
+> **2026-09-24 顺带修复**：`08b` 的「周六 22:00」断言原来死抠字面「22」，模型把它说成
+> 「晚上十点」时会在全量连跑里误报失败（实测连挂两次、单跑通过）。已改成等价说法的
+> 正则并给模型加 `temperature=0`——这也是第 11 章"断言写在语义特征上"的活例子。
+> 另外 `run_all.py` 现在失败会以非 0 退出码结束（此前永远退出 0，当回归测试用会骗绿）。
+
+<details>
+<summary>历史记录（2026-09-23，模型 `agnes-2.5-flash`，14/14）</summary>
 
 ```
   ✅ 05_graph_basics.py                 1.0s
@@ -177,6 +218,8 @@ uv run python examples/mutation_check.py --list      # 只列清单，不跑
 
   通过 14/14
 ```
+
+</details>
 
 > **2026-09-24 增补**：离线组收编 `16_agent_security_lab.py`（第 16 章安全攻击实验）、`17_plan_and_verify_lab.py`（第 17 章规划与自我验证实验）与 `18_handoff_contract_lab.py`（第 18 章交接契约实验），`run_all.py --offline` 现为 **8/8 通过**。
 

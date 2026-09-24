@@ -9,6 +9,9 @@
   3. 同 id 覆盖 = 更新机制
   4. 删除
 
+脚本自带断言（`_shared.Checks`）：租户隔离、同 id 覆盖（数量不变 + 元数据带全）、
+删除生效。失败即以非 0 退出码结束（run_all.py 会当场变红）。
+
 依赖：uv add langchain-text-splitters numpy
   （numpy 是 DeterministicFakeEmbedding 的隐性依赖，langchain-core 没有声明它）
 
@@ -21,11 +24,16 @@
   字典式过滤（{"$eq": ...}）是 Chroma / PGVector 这类集成各自实现的，不是通用协议。
 """
 
+import sys
+
 import _shared  # noqa: F401  （导入时会把 Windows 控制台切到 UTF-8，避免打印 emoji 崩溃）
+from _shared import Checks
 from langchain_core.documents import Document
 from langchain_core.embeddings import DeterministicFakeEmbedding
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+CHECKS = Checks()
 
 # 我们的小知识库：一份咖啡店规则文档（故意写得很啰嗦，方便演示切分）
 DOC = """
@@ -108,7 +116,8 @@ def main() -> None:
         print(f"    - {d.page_content[:36]}...")
 
     other_tenant = store.similarity_search("营业时间", k=20, filter=by_metadata(tenant="shop-999"))
-    print(f"  换个 tenant='shop-999' → 命中 {len(other_tenant)} 条（看不到别家的数据 ✅）")
+    print(f"  换个 tenant='shop-999' → 命中 {len(other_tenant)} 条（隔离生效：看不到别家的数据）")
+    CHECKS.expect(len(other_tenant) == 0, "租户隔离：shop-999 查不到 shop-001 的任何数据")
 
     # 下面是反面示范：字典过滤在这个向量库上会崩。注释掉是因为它会中断整个脚本。
     #   store.similarity_search("营业时间", k=20, filter={"category": "营业时间"})
@@ -127,11 +136,20 @@ def main() -> None:
     print("更新一条（同 id 覆盖）")
     print("=" * 60)
     store.add_documents(
-        [Document(page_content="营业时间：周六改为 10:00-23:00。", metadata={"id": "rule-0", "category": "营业时间"})],
+        [Document(page_content="营业时间：周六改为 10:00-23:00。",
+                  metadata={"id": "rule-0", "source": "coffee-rules.md",
+                            "tenant": "shop-001", "category": "营业时间"})],
         ids=["rule-0"],
     )
     after = store.similarity_search("营业时间", k=20, filter=by_metadata(category="营业时间"))
     print(f"  更新后命中 {len(after)} 条（数量不变，说明是覆盖而不是新增）")
+    rule0 = next((d for d in after if d.metadata.get("id") == "rule-0"), None)
+    print(f"  rule-0 更新后的 metadata：{rule0.metadata if rule0 else '（丢了！）'}")
+    print("  ⚠️ 覆盖是整条替换：metadata 不带全，没带的字段就丢了")
+    CHECKS.expect(len(after) == len(only_hours), "同 id 覆盖：命中数量不变（是覆盖，不是新增）")
+    CHECKS.expect(rule0 is not None and rule0.metadata.get("source") == "coffee-rules.md"
+                  and rule0.metadata.get("tenant") == "shop-001",
+                  "覆盖后 source/tenant 仍在（整条替换的更新要把 metadata 带全）")
 
     # ------------------------------------------------------------------
     # 5. 删除
@@ -139,6 +157,9 @@ def main() -> None:
     store.delete(ids=["rule-0"])
     after_delete = store.similarity_search("营业时间", k=20, filter=by_metadata(category="营业时间"))
     print(f"  删除 rule-0 后命中 {len(after_delete)} 条")
+    CHECKS.expect(len(after_delete) == len(only_hours) - 1
+                  and not any(d.metadata.get("id") == "rule-0" for d in after_delete),
+                  "删除生效：rule-0 从索引里消失，其余文档不受影响")
 
     print("\n" + "=" * 60)
     print("上面所有结论都与向量质量无关，换成真 embedding 结果一样。")
@@ -156,3 +177,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+    sys.exit(CHECKS.report())

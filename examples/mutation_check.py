@@ -6,7 +6,7 @@
   ① 写成同义反复：断言一个字面量，或断言一个刚被 clear() 的全局变量
   ② 覆盖不到：实现被改坏，却没有任何检查变红
   ③ 只打印不判定：❌ 信号写进了输出，但没人拿它当回事
-     （三个实验室现在都自带断言，失败即非 0 退出——③ 已从根上堵住，
+     （三个实验室 + 08a 现在都自带断言，失败即非 0 退出——③ 已从根上堵住，
        本脚本负责证明 ①②③ 真的被堵住了）
 
 这个脚本对每个关键不变量**故意改坏对应实现**，再跑一遍示例，
@@ -20,17 +20,20 @@
 改坏后满足任一条就算杀死：
   * `expect_appear` —— 输出里**必须出现**这句话（该红的地方红了）
   * `expect_vanish` —— 输出里**必须消失**这句话（原来拦住的现在拦不住）
-  * **非 0 退出码** —— 三个实验室都带断言（`_shared.Checks`），改坏一条不变量
+  * **非 0 退出码** —— 三个实验室 + 08a 都带断言（`_shared.Checks`），改坏一条不变量
     就会让脚本非 0 退出；这正是 `run_all.py` 能当场变红的原因
 
 防"假红"的前置校验：先跑一遍**原始文件**，要求信号方向刚好相反
-（`expect_appear` 不在原始输出里、`expect_vanish` 在），且原始文件退出码为 0。
-不满足就报"配置问题"——那说明变异目标选错了，不是断言厉害。
+（`expect_appear` 不在原始输出里、`expect_vanish` 在），且原始文件退出码为 0；
+变异后的源码还要先过一遍 `compile()`。任一不满足就报"配置问题"——
+那说明变异片段写错了（缩进、上下文对不上），不是断言厉害。
+语法错误造成的崩溃尤其不算击杀：子进程崩了会非 0 退出，但断言根本没被执行到。
 
 覆盖范围：只有**代码里强制执行的检查**才有可杀的断言 ——
-第 16 章实验 4（工具白名单 / 路径范围）、第 17 章（计划校验、重规划、验证器、断点）、
-第 18 章（契约四层、通道三件套、消费者纪律、契约测试）。
-第 16 章前三个实验是**故意展示漏洞**的演示，05 / 06a / 07a / 08a 是纯演示，同理：
+第 08 章 a（元数据过滤的租户隔离）、第 16 章实验 4（工具白名单 / 路径范围）、
+第 17 章（计划校验、验证器、重规划、断点）、
+第 18 章（契约校验各层、通道三件套、消费者纪律、契约测试）。
+第 16 章前三个实验是**故意展示漏洞**的演示，05 / 06a / 07a 是纯演示，同理：
 它们没有"该红"的地方，所以不出现在这张表里。
 """
 
@@ -76,6 +79,16 @@ class Mutation:
 
 
 MUTATIONS: list[Mutation] = [
+    # ── 第 08 章 a：元数据过滤（知识库的租户隔离）────────────────────
+    Mutation(
+        id="08a·租户隔离失效",
+        file="08a_index_offline.py",
+        invariant="过滤谓词恒真 → shop-999 能看到 shop-001 的全部数据",
+        old="        return all(doc.metadata.get(key) == value for key, value in expected.items())",
+        new="        return True  # 变异：过滤谓词恒真",
+        expect_vanish="换个 tenant='shop-999' → 命中 0 条",
+    ),
+
     # ── 第 16 章：安全装置（实验 4 是唯一代码强制的一处）──────────────
     Mutation(
         id="16·权限放宽",
@@ -119,8 +132,16 @@ MUTATIONS: list[Mutation] = [
         file="17_plan_and_verify_lab.py",
         invariant="验证器不比对台账 → 编造金额应当被当成事实",
         old='        if num in amounts or num == "2026":',
-        new="            if True:  # 变异：验证器不再查编造金额",
+        new="        if True:  # 变异：验证器不再查编造金额",
         expect_vanish="金额 9000：台账里查无此数",
+    ),
+    Mutation(
+        id="17·幽灵工具放行",
+        file="17_plan_and_verify_lab.py",
+        invariant="计划校验不查工具存在 → 幽灵工具 export_sales_csv 应当被放行",
+        old="        if name not in available_tools:",
+        new="        if False:  # 变异：不再校验幽灵工具",
+        expect_vanish="export_sales_csv 不在允许工具集里",
     ),
     Mutation(
         id="17·replanner 不修",
@@ -172,6 +193,22 @@ MUTATIONS: list[Mutation] = [
         expect_vanish="❌ 拒绝：total_revenue 应为 int，得到 str",
     ),
     Mutation(
+        id="18·夹带过程失效",
+        file="18_handoff_contract_lab.py",
+        invariant="禁区不检查 → 带 thoughts/trace 的包混进下游",
+        old="    for f in CONTRACT_FORBIDDEN & set(p):",
+        new="    for f in ():  # 变异：禁区不再检查",
+        expect_vanish="夹带过程数据：thoughts",
+    ),
+    Mutation(
+        id="18·超长上限失效",
+        file="18_handoff_contract_lab.py",
+        invariant="不查长度 → 塞满过程说明的超长包照样进下游",
+        old="    if len(str(p)) > MAX_PAYLOAD_CHARS:",
+        new="    if False:  # 变异：不再检查超长",
+        expect_vanish="超长：",
+    ),
+    Mutation(
         id="18·消费者纪律",
         file="18_handoff_contract_lab.py",
         invariant="消费者把字段当指令读 → 带毒 notes 触发外发",
@@ -210,6 +247,14 @@ MUTATIONS: list[Mutation] = [
         old='    if msg["seq"] <= _seen_seq.get(msg["sender"], 0):',
         new="    if False:  # 变异：不再防重放",
         expect_appear="④ 把 ① 的消息原样再发一遍：✅",
+    ),
+    Mutation(
+        id="18·新鲜性失效",
+        file="18_handoff_contract_lab.py",
+        invariant="不查时间戳 → 截获一小时前的合法旧消息照样进得来",
+        old='    if abs(now - msg["ts"]) > FRESH_WINDOW:',
+        new="    if False:  # 变异：不再检查新鲜性",
+        expect_appear="合法签名但时间戳是一小时前的：✅",
     ),
 ]
 
@@ -310,14 +355,23 @@ def main() -> int:
         output = baselines.get(m.file, "")
         if not output:
             continue
+        source = (HERE / m.file).read_text(encoding="utf-8")
         if m.expect_appear and m.expect_appear in output:
             problems.append(f"{m.id}：expect_appear 在原始输出里就出现了（选错了信号）")
         if m.expect_vanish and m.expect_vanish not in output:
             problems.append(f"{m.id}：expect_vanish 在原始输出里不存在（选错了信号）")
-        if m.old not in (HERE / m.file).read_text(encoding="utf-8"):
+        if m.old not in source:
             problems.append(f"{m.id}：变异片段在 {m.file} 里找不到（源码改过了？）")
-        elif (HERE / m.file).read_text(encoding="utf-8").count(m.old) != 1:
+        elif source.count(m.old) != 1:
             problems.append(f"{m.id}：变异片段在 {m.file} 里出现了多次，无法唯一定位")
+        else:
+            try:
+                compile(source.replace(m.old, m.new), m.file, "exec")
+            except SyntaxError as e:
+                problems.append(
+                    f"{m.id}：变异后的源码无法编译（line {e.lineno}: {e.msg}）——"
+                    "变异片段的缩进/上下文写错了。语法错误造成的崩溃不是断言在咬人，不能算击杀"
+                )
 
     if problems:
         print("\n配置问题（先修这些，它们不是断言厉害，是变异选错了）")

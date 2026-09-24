@@ -107,7 +107,7 @@ def answer(state: ServiceState) -> dict:
     result = agent.invoke(
         {"messages": [{"role": "user", "content": f"{context}用户这次说：{state['message']}"}]}
     )
-    reply = result["messages"][-1].content
+    reply = str(result["messages"][-1].content)
     print(f"  [answer] {reply[:50]}...")
     return {"answer": reply, "history": [f"咨询：{state['message'][:20]}"]}
 

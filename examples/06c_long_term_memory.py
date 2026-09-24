@@ -19,6 +19,7 @@
 
 import os
 import sys
+import uuid
 
 import _shared  # noqa: F401  （导入时会把 Windows 控制台切到 UTF-8）
 from _shared import Checks, get_model, title
@@ -39,7 +40,7 @@ def build_store() -> InMemoryStore:
     """建一个「能语义检索」的 Store。
 
     index 里的 embed 决定 search(query=...) 怎么算相似度。
-    这里用假 embedding：跑得通、不花钱、但结果无语义（和 04 的例子同一个思路）。
+    这里用假 embedding：跑得通、不花钱、但结果无语义（和 08a 的例子同一个思路）。
     要真效果就换成真 embedding（EMBEDDING_MODEL / EMBEDDING_API_KEY，见 _shared.get_embeddings）。
 
     ⚠️ 实测细节：不配 index 时 search(query=...) 不会报错，而是退化成
@@ -85,8 +86,9 @@ def build_agent(store: InMemoryStore):
     def remember(fact: str, runtime: ToolRuntime[None, AgentState]) -> str:
         """把关于当前用户的一条事实写进长期记忆。一条一句话，例如「喝咖啡要少冰」。"""
         user_id = runtime.config["configurable"]["user_id"]
-        existing = runtime.store.search(("memories", user_id), limit=100)
-        runtime.store.put(("memories", user_id), f"fact-{len(existing)}", {"fact": fact})
+        # id 必须全局唯一：拿「现有条数」拼 id（fact-{len(existing)}）会撞掉旧条目
+        # —— put 的语义是「同 id 覆盖」，不是追加（和 08a 的更新机制同一件事）。
+        runtime.store.put(("memories", user_id), uuid.uuid4().hex, {"fact": fact})
         return "已记住。"
 
     @tool

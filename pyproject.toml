@@ -14,6 +14,10 @@ dependencies = [
     # numpy 是 DeterministicFakeEmbedding 的隐性依赖，
     # langchain-core 没声明它，缺了会报 NameError: name 'np' is not defined
     "numpy",
+    # 下面两个是示例直接 import 的包，目前靠上游传递依赖带入；
+    # 显式声明，免得上游哪天收紧依赖，示例突然跑失败
+    "pydantic",              # 04 / 12 的结构化输出
+    "typing_extensions",     # 05 / 06a / 07b / 12 的类型注解
 ]
 
 [tool.uv]

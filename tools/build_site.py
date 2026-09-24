@@ -58,7 +58,8 @@ def main() -> int:
         shutil.rmtree(OUT)
     OUT.mkdir(parents=True)
 
-    # 14 章讲义：文件名原样搬过去，正文里的互链（NN-标题.md）就不用改了
+    # 全部讲义章（00–18 由 glob 自动收，新增章不用改这里）：
+    # 文件名原样搬过去，正文里的互链（NN-标题.md）就不用改了
     chapters = sorted(p for p in (ROOT / "tutorial").glob("*.md") if p.name != "README.md")
     if not chapters:
         print("✗ 没找到 tutorial/*.md", file=sys.stderr)

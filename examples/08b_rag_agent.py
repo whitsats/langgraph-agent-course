@@ -5,9 +5,11 @@
 
 观察重点：知识库里没有的东西，它应该说"不知道"，而不是编。
 
-脚本自带断言（`_shared.Checks`）：知识库里**有**的事实必须带对（22:00 / 500 分），
+脚本自带断言（`_shared.Checks`）：知识库里**有**的事实必须带对（周六 22:00 / 500 分），
 知识库里**没有**的必须承认不知道、且不得出现任何具体数字（编造就是在这里被抓的）。
-断言写在语义特征上（第 11 章），不比对整句话。失败即以非 0 退出码结束。
+断言写在语义特征上（第 11 章），不比对整句话——模型的措辞会漂：22:00 可能被说成
+「晚上十点」，所以时间特征用等价说法的正则去匹配，而不是死抠字面「22」。
+失败即以非 0 退出码结束。
 """
 
 import re
@@ -82,7 +84,8 @@ def main() -> None:
     search_rules = make_search_tool(retriever)
 
     agent = create_agent(
-        model=get_model(),
+        # 温度 0：RAG 管线的演示要的是稳定复现，不是文采（00 / 06c 同款）
+        model=get_model(temperature=0),
         tools=[search_rules],
         system_prompt=(
             "你是咖啡店客服。回答涉及店内规则的问题时，必须先调用 search_rules 查询，"
@@ -90,14 +93,17 @@ def main() -> None:
         ),
     )
 
-    # (问题, 知识库里应当命中的事实特征；None = 知识库里没有，必须承认不知道)
+    # (问题, 答案必须命中的事实特征（正则），特征的人话描述)
+    # None = 知识库里没有，必须承认不知道
     questions = [
-        ("你们周六几点关门？", "22"),          # 营业规则：周六 09:00-22:00
-        ("满多少分可以换咖啡？", "500"),      # 会员规则：满 500 分换中杯拿铁
-        ("你们卖咖啡豆吗？", None),            # 知识库里没有 → 应该承认不知道
+        # 22:00 的措辞会漂：22:00 / 22 点 / 晚上十点 都算对——断言的是"答对了时间"这个语义，
+        # 不是某个字面写法（这正是第 11 章"断言写在语义特征上"的活例子）
+        ("你们周六几点关门？", r"22[:：]\s*00|22\s*点|十点|10\s*点", "周六关门时间 22:00"),
+        ("满多少分可以换咖啡？", r"500", "兑换门槛 500 分"),
+        ("你们卖咖啡豆吗？", None, "知识库里没有咖啡豆"),
     ]
 
-    for q, expect_fact in questions:
+    for q, expect_fact, label in questions:
         title(f"问：{q}")
         result = agent.invoke({"messages": [{"role": "user", "content": q}]})
 
@@ -114,7 +120,8 @@ def main() -> None:
 
         if expect_fact:
             CHECKS.expect(used_retrieval, "回答前先调了 search_rules（不是凭记忆答）")
-            CHECKS.expect(expect_fact in answer, f"知识库里有 → 答案带上事实特征「{expect_fact}」")
+            CHECKS.expect(re.search(expect_fact, answer) is not None,
+                          f"知识库里有 → 答案带上「{label}」")
         else:
             CHECKS.expect(says_dont_know(answer), "知识库里没有 → 明确承认不知道")
             # 编造的指纹：冒出一个知识库里根本没有的规格/价格数字

@@ -4,6 +4,7 @@
 .env.local
 *.env
 !examples/.env.example
+!virtual_rnd_center/.env.example
 
 # ── Python ────────────────────────────────────────────────────
 __pycache__/

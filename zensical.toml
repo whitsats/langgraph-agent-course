@@ -19,7 +19,7 @@
 
 [project]
 site_name = "LangChain + LangGraph 智能体开发教程"
-site_description = "写给有编程经验、但没做过智能体的人 —— 18 章讲义 + 17 个可直接运行的示例"
+site_description = "写给有编程经验、但没做过智能体的人 —— 19 章讲义（含 5 篇附录）+ 17 个可直接运行的示例"
 site_url = "https://whitsats.github.io/langgraph-agent-course/"
 repo_url = "https://github.com/whitsats/langgraph-agent-course"
 repo_name = "whitsats/langgraph-agent-course"

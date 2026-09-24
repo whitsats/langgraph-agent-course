@@ -7,13 +7,15 @@
 不会调工具，后面所有 agent 写法都跑不通。
 """
 
+import os
 import sys
 import time
 
 import _shared  # noqa: F401  （导入时会把 Windows 控制台切到 UTF-8，避免打印 emoji 崩溃）
 
 
-def version_checks() -> None:
+def version_checks() -> int:
+    """返回不可用的 API 数量（0 = 全部可用）。"""
     from importlib.metadata import PackageNotFoundError, version
 
     print(f"Python: {sys.version.split()[0]}")
@@ -54,15 +56,17 @@ def version_checks() -> None:
     else:
         print("核心 API 全部可用 ✅")
     print("提醒：判断一份教程死活，搜有没有 AgentExecutor。有 = 过时。")
+    return failed
 
 
-def live_check() -> None:
+def live_check() -> int:
+    """返回退出码：0 = 两项检查都通过；1 = 没跑成或模型不会调工具。"""
     try:
         from _shared import get_model, resolve_config, title
         from langchain.tools import tool
     except ImportError as e:
         print(f"\n无法导入示例依赖（{e}）→ 先执行：uv add langchain langchain-openai python-dotenv")
-        return
+        return 1
 
     config = resolve_config()
     title("当前配置（来自 examples/.env 或环境变量）")
@@ -71,9 +75,9 @@ def live_check() -> None:
     print(f"  base_url : {config.get('base_url', '(provider 默认)')}")
     print(f"  api_key  : {'已设置 (' + masked[:6] + '...)' if masked else '未设置'}")
 
-    if not config.get("api_key") and not __import__("os").environ.get("OPENAI_API_KEY"):
+    if not config.get("api_key") and not os.environ.get("OPENAI_API_KEY"):
         print("\n没有找到 Key。请在 examples/.env 里填 AGNES_API_KEY=...")
-        return
+        return 1
 
     @tool
     def get_time(city: str) -> str:
@@ -109,6 +113,8 @@ def live_check() -> None:
             print("\n  解决：在 examples/.env 里换模型试试")
             print("     MODEL=agnes-2.5-flash  （默认，实测会调工具）")
             print("     然后重新执行：uv run python examples/00_env_check.py --live")
+            return 1
+        return 0
     except Exception as e:
         print(f"\n调用失败：{type(e).__name__}: {e}")
 
@@ -123,19 +129,21 @@ def live_check() -> None:
             print("     MODEL=agnes-2.5-flash   （实测正常，会调工具）")
             print("     实测记录：2026-09-23 agnes-3.0-flash 就是这个症状；")
             print("               agnes-2.5-pro 在免费额度下直接 403（也跟你无关）")
-            return
+            return 1
 
         print("\n排查顺序：")
         print("  1. Key 是否正确、有没有空格")
         print("  2. MODEL_BASE_URL 是否是 https://api.agnes-ai.cn/v1")
         print("  3. 模型名是否写对（agnes-2.5-flash / agnes-3.0-flash …）")
         print("  4. 网络能否访问该网关")
+        return 1
 
 
 if __name__ == "__main__":
-    version_checks()
+    failed = version_checks()
     if "--live" in sys.argv:
-        live_check()
+        failed += live_check()
     else:
         print("\n下一步：加 --live 做一次真实调用测试")
         print("  uv run python examples/00_env_check.py --live")
+    sys.exit(1 if failed else 0)

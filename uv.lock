@@ -21,7 +21,9 @@ dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
     { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "pydantic" },
     { name = "python-dotenv" },
+    { name = "typing-extensions" },
 ]
 
 [package.metadata]
@@ -33,7 +35,9 @@ requires-dist = [
     { name = "langgraph", specifier = ">=1.2.12" },
     { name = "langgraph-checkpoint-sqlite" },
     { name = "numpy" },
+    { name = "pydantic" },
     { name = "python-dotenv" },
+    { name = "typing-extensions" },
 ]
 
 [[package]]

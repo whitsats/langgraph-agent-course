@@ -2,3 +2,5 @@
 __pycache__/
 lib/
 .DS_Store
+# 跑后端会再生的 SQLite 库：二进制不可 review，每次重跑必然整文件 diff，不入库
+output/**/*.db

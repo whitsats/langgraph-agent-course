@@ -22,7 +22,7 @@ CHECKS = Checks()
 def ask(agent, question: str, thread_id: str) -> str:
     config = {"configurable": {"thread_id": thread_id}}       # ★ 会话 id
     result = agent.invoke({"messages": [{"role": "user", "content": question}]}, config)
-    return result["messages"][-1].content
+    return str(result["messages"][-1].content)
 
 
 def main() -> None:

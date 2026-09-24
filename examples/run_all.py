@@ -6,6 +6,7 @@
     uv run python examples/run_all.py --only 06    # 只跑第 06 章那一组（06a/06b/06c 全跑）
 
 每个例子都是独立子进程，互不影响；失败的会打印末尾输出，方便你直接定位。
+有任何失败，脚本以非 0 退出码结束——所以它可以直接当回归测试用（第 11 章）。
 """
 
 import argparse
@@ -130,29 +131,41 @@ def run_group(name: str, cases: list, results: list, pace: float = 0.0) -> None:
         results.append((script + (f" {arg}" if arg else ""), ok, elapsed, note))
 
 
-def main() -> None:
+def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--offline", action="store_true", help="只跑不需要 Key 的例子")
-    parser.add_argument("--live", action="store_true", help="只跑需要 Key 的例子")
-    parser.add_argument("--only", default=None, help="只跑章号匹配的那一组，如 06 会跑 06a/06b/06c")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--offline", action="store_true", help="只跑不需要 Key 的例子")
+    group.add_argument("--live", action="store_true", help="只跑需要 Key 的例子")
+    group.add_argument("--only", default=None, help="只跑章号匹配的那一组，如 06 会跑 06a/06b/06c")
     args = parser.parse_args()
 
     if not (args.offline or args.live or args.only):
         args.offline = args.live = True
 
+    # 06a 用 SQLite 演示"跨进程恢复"，先清掉保证"第一次运行"是真的第一次
+    if CHECKPOINT_DB.exists():
+        CHECKPOINT_DB.unlink()
+
     results: list = []
+    offline_scripts = {s for s, _ in OFFLINE}
 
     if args.only:
         cases = [(s, a) for s, a in OFFLINE + LIVE if s.startswith(args.only)]
         if not cases:
-            print(f"没找到章号以 {args.only} 开头的例子")
-            return
+            print(f"没找到章号以 {args.only} 开头的例子（试试 06 / 08 / 12）")
+            return 2
+        if not has_key():
+            skipped = [(s, a) for s, a in cases if s not in offline_scripts]
+            if skipped:
+                cases = [(s, a) for s, a in cases if s in offline_scripts]
+                print(f"  没有检测到 Key，跳过需要 Key 的例子：{'、'.join(s for s, _ in skipped)}")
+                print("    cp examples/.env.example examples/.env  # 填 AGNES_API_KEY=... 后重跑")
+        if not cases:
+            print("\n  这一组的例子全部需要 Key，按上面两步填好再跑。")
+            return 1
         run_group(f"只跑 {args.only}", cases, results)
     else:
         if args.offline:
-            # 02 会写 SQLite，先清掉保证"第一次运行"是真的第一次
-            if CHECKPOINT_DB.exists():
-                CHECKPOINT_DB.unlink()
             run_group("第一组：不需要 Key（离线）", OFFLINE, results)
 
         if args.live:
@@ -173,7 +186,7 @@ def main() -> None:
     print("=" * 60)
     if not results:
         print("  没有执行任何例子")
-        return
+        return 1
 
     passed = sum(1 for _, ok, _, _ in results if ok)
     for name, ok, elapsed, _ in results:
@@ -183,10 +196,11 @@ def main() -> None:
 
     if passed == len(results):
         print("\n  全部通过 🎉  下一步看 LEARNING_PLAN 第 6 周：用 LangGraph 重写案例")
-    else:
-        print("\n  如果失败里出现 429 / '速率限制'：那是免费额度的速率上限，隔几分钟再跑；")
-        print("  其余情况，把失败那条的完整报错贴给我，我来修。")
+        return 0
+    print("\n  如果失败里出现 429 / '速率限制'：那是免费额度的速率上限，隔几分钟再跑；")
+    print("  其余情况，把失败那条的完整报错贴给我，我来修。")
+    return 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

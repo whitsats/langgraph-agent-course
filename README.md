@@ -8,7 +8,7 @@
 手机上也能读、章内可跳转。站点由 `tutorial/` 直接生成，改完讲义推到 `main` 会自动重建，
 详见下面的“站点怎么维护”。
 
-1. **`tutorial/`** ← 主入口（讲义，18 章）。从 [`tutorial/00-准备工作.md`](tutorial/00-准备工作.md) 开始，
+1. **`tutorial/`** ← 主入口（讲义 19 章：正文 14 章 + 5 篇附录）。从 [`tutorial/00-准备工作.md`](tutorial/00-准备工作.md) 开始，
    或先看 [`tutorial/README.md`](tutorial/README.md) 的目录与三条学习路径。
    **每章配一个能直接跑的例子**，读一章跑一个：
 
@@ -20,18 +20,19 @@
    uv run python examples/run_all.py               # 一键全跑
    ```
 
-   > ✅ 实测状态（2026-09-22）：网关 `https://api.agnes-ai.cn/v1` 下**全部例子 14/14 通过**（离线 5 项 + 在线 9 项，`06a` 跑两次）。
-   > 先跑 `00_env_check.py --live`，看到 `✅ 会调用工具` 再往下读。若报 `401 Invalid token`，那是 **Key 的问题，不是代码问题**（排查方法见 `tutorial/README.md` 的“实测状态”节）。
+   > ✅ 实测状态（2026-09-24）：网关 `https://api.agnes-ai.cn/v1` 下**全部例子 17/17 通过**
+   > （离线 8 项 + 在线 9 项，`06a` 跑两次；断言另由 `mutation_check.py` 的 20 条变异回归守护，20/20 被杀死）。
+   > 先跑 `00_env_check.py --live`，看到 `✅ 会调用工具` 再往下读。若报 `401 Invalid token`，那是 **Key 的问题，不是代码问题**（排查方法见 `tutorial/README.md` 的”实测状态”节）。
 
 2. **`LEARNING_PLAN.md`** ← 时间与取舍视角的配套。开头是一张**完整度复核矩阵**（38 项能力面 × 覆盖位置 × 深度取舍），后面是 5 周核心计划 + 按需扩展：手写 Agent Loop、LangChain 模型层、LangGraph 编排、**状态数据库（checkpointer 各后端）**、记忆三型、**知识库 / RAG / 向量数据库（pgvector、元数据过滤、混合检索、重排、增量索引）**、MCP、多智能体、Deep Agents、沙箱权限、评测、前端接入、部署；最后一周用 LangGraph 重写 `virtual_rnd_center/` 的 MVP 链路。
-3. **`examples/`** ← 配套示例，**每个概念一个能直接跑的小例子**（一半不需要 API Key）。默认走 Agnes 免费额度，填一行 `AGNES_API_KEY` 就能跑全部。索引见 `examples/README.md` 与 `LEARNING_PLAN.md` 第 16 节。
+3. **`examples/`** ← 配套示例，**每个概念一个能直接跑的小例子**（近一半不需要 API Key）。默认走 Agnes 免费额度，填一行 `AGNES_API_KEY` 就能跑全部。索引见 `examples/README.md` 与 `LEARNING_PLAN.md` 第 16 节。
 4. 读到毕业项目那章（或想提前看看要重写什么）时，再进 `virtual_rnd_center/`。
 
 ## 目录
 
 ```
 .
-├── tutorial/                 # ★ 讲义：18 章，从心智模型到毕业项目 + 四篇附录
+├── tutorial/                 # ★ 讲义 19 章（00–18）：从心智模型到毕业项目，含 5 篇附录
 │   ├── README.md             #   目录、三条学习路径、开始之前
 │   ├── 00–04                 #   上手：环境、心智模型、第一次跑通、手写循环、工具
 │   ├── 05–07                 #   编排：状态与 reducer、落库与记忆、人工审批
@@ -43,8 +44,10 @@
 ├── uv.lock                   # 锁定版本（实测环境：langchain 1.4.2 / langgraph 1.2.12）
 ├── examples/                 # 配套示例：文件名开头的数字 = 讲义章号
 │   ├── README.md             #   示例索引、命名规则与运行方式
+│   ├── run_all.py、mutation_check.py、
+│   │   _shared.py            #   一键回归（失败非 0 退出）、变异自检、公共小工具
 │   ├── 00、05、06a、07a、08a、
-│   │   16、17、18              #   不需要 Key（离线可跑，共 8 项）
+│   │   16、17、18              #   不需要 Key（离线可跑，共 8 个文件）
 │   ├── 其余 9 个               #   需要一个模型 Key
 │   ├── 12_mini_project_coffee_shop.py  #   完整小项目：把零件拼成可交付形态
 │   └── 06c_long_term_memory.py         #   长期记忆（Store）：跨会话记住同一个人
@@ -82,9 +85,12 @@
 
 ```bash
 uv run python tools/build_site.py                                      # 拼装：tutorial/ + 学习计划 + 示例索引 → site-src/
-uvx --with-requirements requirements-docs.txt zensical serve           # 本地预览 http://127.0.0.1:8000/
-uvx --with-requirements requirements-docs.txt zensical build --strict  # 构建（失效链接直接报错）
+uvx --default-index https://pypi.org/simple --with-requirements requirements-docs.txt zensical serve           # 本地预览 http://127.0.0.1:8000/
+uvx --default-index https://pypi.org/simple --with-requirements requirements-docs.txt zensical build --strict  # 构建（失效链接直接报错）
 ```
+
+> `--default-index` 别省：uvx 是隔离环境、不读根目录 pyproject 里的索引配置，
+> 默认镜像对 zensical / resvg-py 会直接 403（pyproject 里记过同样的坑）。
 
 推到 `main` 且改动落在讲义 / 配置 / 素材相关路径时，[`.github/workflows/docs.yml`](.github/workflows/docs.yml) 自动重建并部署。
 **加一章讲义只需两步**：写 `.md`、在 `zensical.toml` 的 `nav` 里登记一行。
@@ -92,7 +98,7 @@ uvx --with-requirements requirements-docs.txt zensical build --strict  # 构建�
 **换标识与分享预览图**：编辑 `site-assets/logo.svg`（标识的**唯一**来源），然后
 
 ```bash
-uvx --with resvg-py --with pillow python tools/make_assets.py
+uvx --default-index https://pypi.org/simple --with resvg-py --with pillow python tools/make_assets.py
 ```
 
 `favicon.ico`（16/32/48 多尺寸）、`apple-touch-icon.png`、`og-image.png` 全部从那个 SVG 派生，
