@@ -11,14 +11,19 @@
 流程：
     START → classify ─┬─ 咨询 → answer ───────────────→ finalize → END
                       └─ 退款 → approve（大额时 interrupt）→ finalize → END
+
+脚本自带断言（`_shared.Checks`）：意图与金额抽对、小额不打断、大额必打断、
+同一 thread 的记忆累积、人工拒绝不得走成受理。失败即以非 0 退出码结束。
 """
 
+import re
+import sys
 from typing import Annotated, Literal
 
 from typing_extensions import TypedDict
 from operator import add
 
-from _shared import get_model, title
+from _shared import Checks, get_model, title
 
 from langchain.agents import create_agent
 from langchain.tools import tool
@@ -26,6 +31,8 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, interrupt
 from pydantic import BaseModel, Field
+
+CHECKS = Checks()
 
 APPROVAL_THRESHOLD = 500          # 业务规则写死在代码里，不靠模型自觉
 
@@ -60,15 +67,26 @@ def lookup_order(phone: str) -> str:
 
 # ── 节点 1：分类 ────────────────────────────────────────────────────────────
 def classify(state: ServiceState) -> dict:
+    # 判据写进提示词：回忆/询问 ≠ 新的退款申请（否则"我刚才退了多少"会被当成想退款）
     intent = get_model(temperature=0).with_structured_output(Intent).invoke(
-        f"判断下面这句话的意图：{state['message']}"
+        "判断下面这句话的意图。判据：\n"
+        "  - 用户在**提问或回忆**信息（如「我刚才是退了多少钱」「你们几点关门」）→ 咨询\n"
+        "  - 只有用户**提出一个新的退款请求**（如「我想退款 38 元」）→ 退款申请\n"
+        "  金额取用户明确说出的数字；没说就填 0。\n"
+        f"用户这句话：{state['message']}"
     )
     print(f"  [classify] 意图={intent.kind} 金额={intent.amount}")
     return {"kind": intent.kind, "amount": intent.amount}
 
 
 def route_after_classify(state: ServiceState) -> str:
-    return "approve" if state["kind"] == "退款申请" else "answer"
+    # ★ 业务规则写在代码里：**没有明确金额的"退款申请"不是可执行的退款**。
+    #   实测（2026-09-24）："我刚才是退了多少钱？" 会被模型判成退款申请、金额 0，
+    #   原来的分流直接进 approve → 自动受理 0 元。分类永远可能错，
+    #   所以这里再挡一道——第 12 章说的"不靠模型自觉"，指的就是这种地方。
+    if state["kind"] == "退款申请" and state["amount"] > 0:
+        return "approve"
+    return "answer"
 
 
 # ── 节点 2：咨询 → 带工具的 agent 回答 ─────────────────────────────────────
@@ -80,7 +98,15 @@ def answer(state: ServiceState) -> dict:
             "你是咖啡店客服。只用下面的店规回答，查不到就说不知道，不要编。\n" + RULES
         ),
     )
-    result = agent.invoke({"messages": [{"role": "user", "content": state["message"]}]})
+    # ★ 把同一 thread 攒下的 history 喂给回答节点——否则"我刚才是退了多少钱"
+    #   这类追问答不上来（子 agent 只看得到当前这一句）。
+    context = ""
+    if state.get("history"):
+        context = ("本会话之前的记录：\n"
+                   + "\n".join(f"- {item}" for item in state["history"]) + "\n\n")
+    result = agent.invoke(
+        {"messages": [{"role": "user", "content": f"{context}用户这次说：{state['message']}"}]}
+    )
     reply = result["messages"][-1].content
     print(f"  [answer] {reply[:50]}...")
     return {"answer": reply, "history": [f"咨询：{state['message'][:20]}"]}
@@ -121,12 +147,13 @@ def build_graph():
     return builder.compile(checkpointer=InMemorySaver())
 
 
-def turn(graph, config, message: str, human_reply: bool | None = None) -> None:
-    """处理一轮对话。如果中途需要人工，就恢复一次。"""
+def turn(graph, config, message: str, human_reply: bool | None = None) -> dict:
+    """处理一轮对话。如果中途需要人工，就恢复一次。返回值供断言检查。"""
     state_in = {"message": message, "kind": "", "amount": 0, "answer": "", "history": []}
     result = graph.invoke(state_in, config)
+    interrupted = bool(result.get("__interrupt__"))
 
-    if result.get("__interrupt__"):
+    if interrupted:
         pending = result["__interrupt__"][0].value
         print(f"  ⏸  等待人工：{pending.get('问题')}")
         decide = True if human_reply is None else human_reply
@@ -134,6 +161,8 @@ def turn(graph, config, message: str, human_reply: bool | None = None) -> None:
         result = graph.invoke(Command(resume=decide), config)
 
     print(f"  💬 {result['answer']}")
+    return {"interrupted": interrupted, "answer": result["answer"],
+            "kind": result.get("kind", ""), "amount": result.get("amount", 0)}
 
 
 def main() -> None:
@@ -141,20 +170,42 @@ def main() -> None:
     thread = {"configurable": {"thread_id": "customer-888"}}     # ★ 同一个客人
 
     title("第 1 轮：咨询（走 answer 分支）")
-    turn(graph, thread, "你们周六几点关门？")
+    r1 = turn(graph, thread, "你们周六几点关门？")
+    CHECKS.expect(r1["kind"] == "咨询", "第 1 轮分类对了（结构化输出，不靠正则）")
+    CHECKS.expect(bool(r1["answer"]), "第 1 轮给出了回答")
 
     title("第 2 轮：小额退款（自动受理）")
-    turn(graph, thread, "我那杯拿铁做错了，想退款 38 元")
+    r2 = turn(graph, thread, "我那杯拿铁做错了，想退款 38 元")
+    CHECKS.expect(r2["kind"] == "退款申请" and r2["amount"] == 38,
+                  "第 2 轮意图与金额抽对了（退款申请 / 38 元）")
+    CHECKS.expect(not r2["interrupted"], "38 元未超阈值 → 不该打断等人")
+    CHECKS.expect("已受理" in r2["answer"], "小额退款自动受理")
 
     title("第 3 轮：大额退款（触发人工审批）")
-    turn(graph, thread, "团建订的 1280 元想整单退掉", human_reply=True)
+    r3 = turn(graph, thread, "团建订的 1280 元想整单退掉", human_reply=True)
+    CHECKS.expect(r3["interrupted"], "1280 元超阈值 → 必须中断等人点头")
+    CHECKS.expect("通过审批" in r3["answer"], "人工同意后才走受理分支")
 
     title("第 4 轮：换个方式问，看它记不记得这个客人")
-    turn(graph, thread, "再问一下，我刚才是退了多少钱？")
+    r4 = turn(graph, thread, "再问一下，我刚才是退了多少钱？")
     snapshot = graph.get_state(thread)
+    history = snapshot.values.get("history", [])
     print(f"\n  这个 thread 的记忆（history 字段）:")
-    for item in snapshot.values.get("history", []):
+    for item in history:
         print(f"    - {item}")
+
+    # 记忆是"不该丢"的东西：reducer 写错、thread_id 换了、忘了传 config 都会在这里红
+    CHECKS.expect(len(history) >= 3, "同一 thread 上累积了 3 轮记忆（reducer 没丢）")
+    CHECKS.expect(any("1280" in item for item in history), "记忆里留着大额退款那一轮")
+    # 千分位与空格不算差别——断言写在语义特征上，不卡在格式上（第 11 章）
+    compact = re.sub(r"[,\s]", "", r4["answer"])
+    CHECKS.expect("1280" in compact, "第 4 轮答得出刚才退了多少钱（history 喂给了回答节点）")
+
+    # "不该发生的事"（第 11 章）：提问不能被当成一笔新退款、0 元不能被自动放行
+    CHECKS.expect(not any(item.endswith("退款 0 元") for item in history),
+                  "没有把 0 元的无效退款记进历史")
+    CHECKS.expect("已受理退款 0 元" not in r4["answer"],
+                  "提问不会被自动受理成 0 元退款（金额守卫的功劳）")
 
     title("一个能交付的小项目，还差什么？")
     print("  ✅ 流程可控（状态机）+ 分支 + 人工卡点 + 断点续跑")
@@ -168,3 +219,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+    sys.exit(CHECKS.report())

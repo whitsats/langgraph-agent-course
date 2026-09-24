@@ -12,12 +12,18 @@
 
 为什么不是「把资料拼进 system_prompt」？因为那样只对当前这次请求有效，
 而且用户画像会越拼越长。长期记忆要的是「按用户取、按主题召回」。
+
+脚本自带断言（`_shared.Checks`）：Store 的读写与 namespace 隔离、以及
+换会话后依然记得你。失败即以非 0 退出码结束（run_all 会变红）。
 """
 
 import os
+import sys
 
 import _shared  # noqa: F401  （导入时会把 Windows 控制台切到 UTF-8）
-from _shared import get_model, title
+from _shared import Checks, get_model, title
+
+CHECKS = Checks()
 
 from langchain.agents import AgentState, create_agent
 from langchain.tools import ToolRuntime, tool
@@ -62,6 +68,13 @@ def demo_store(store: InMemoryStore) -> None:
     for h in hits:
         print(f"    - {h.value['fact']}")
     print(f"  （只命中 {USER_A} 自己的记忆，看不到 {USER_B} 的——隔离靠 namespace，不靠 prompt）")
+
+    namespaces = [tuple(ns) for ns in store.list_namespaces()]
+    CHECKS.expect(got is not None and "不加糖" in got.value["fact"], "Store.get 取回刚写进去的事实")
+    CHECKS.expect(("memories", USER_A) in namespaces and ("memories", USER_B) in namespaces,
+                  "两个用户的记忆各占一个 namespace（隔离靠 namespace，不靠 prompt）")
+    CHECKS.expect(len(hits) == 2 and not any("李雷" in h.value["fact"] for h in hits),
+                  f"search 只在 {USER_A} 自己的抽屉里找（共 2 条，看不到 {USER_B} 的）")
 
     print("\n  记忆点：checkpointer 由框架自动管；Store 要你自己设计")
     print("         ——存什么、存谁的、什么时候写。")
@@ -122,7 +135,15 @@ def demo_agent(store: InMemoryStore) -> None:
     for message in r2["messages"]:
         for call in getattr(message, "tool_calls", None) or []:
             print(f"    - {call['name']}({call['args']})")
-    print(f"  回答: {str(r2['messages'][-1].content)[:140]}")
+    answer2 = str(r2["messages"][-1].content)
+    print(f"  回答: {answer2[:140]}")
+
+    # 断言撞在"跨会话"上：新 thread 里也必须拿得到同一份记忆
+    called = [c["name"] for m in r2["messages"]
+              for c in (getattr(m, "tool_calls", None) or [])]
+    CHECKS.expect("recall" in called, "会话 2 先调 recall 查长期记忆，而不是凭猜")
+    CHECKS.expect(("少冰" in answer2) or ("花生" in answer2),
+                  "新会话里依然记得偏好/过敏（跨 thread 记忆生效）")
 
     print("\n  对照：如果只有 checkpointer、没有 store（第 08 章的例子），")
     print("        会话 2 完全不认识你——checkpointer 跨不出单个 thread。")
@@ -150,3 +171,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+    sys.exit(CHECKS.report())

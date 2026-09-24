@@ -145,3 +145,50 @@ def show_config() -> None:
     print(f"  model    : {config['model']}")
     print(f"  base_url : {config.get('base_url', '(provider 默认)')}")
     print(f"  api_key  : {masked}")
+
+
+# ---------------------------------------------------------------------------
+# 实验室的断言收集器
+# ---------------------------------------------------------------------------
+
+class Checks:
+    """示例自带的断言：任何一条失败 → 脚本以非 0 退出码结束。
+
+    为什么要有它：示例里的检查一直是 `print("✅ / ❌ ...")`。**打印不影响退出码**，
+    所以 `run_all.py` 只看退出码就永远报绿——某条不变量被改坏了，结果表照样是 ✅，
+    只有"凑巧有人盯着输出看"才能发现。`mutation_check.py` 能事后抓出来，
+    但真正的修法是让实验室自己就地变红：
+
+        checks = Checks()
+        checks.expect(len(SENT_EMAILS) == 0, "窄权限 agent 不该外泄")
+        ...
+        sys.exit(checks.report())
+
+    约定：`expect` 只记录、不打印——实验室自己的输出已经写了证据；
+    失败项在结尾统一列出，方便一眼看出是哪条不变量红了。
+    """
+
+    def __init__(self) -> None:
+        self.passed = 0
+        self.failed: list[str] = []
+
+    def expect(self, ok: bool, what: str) -> bool:
+        """记一条断言，返回结果本身（方便写成 if）。"""
+        if ok:
+            self.passed += 1
+        else:
+            self.failed.append(what)
+        return bool(ok)
+
+    def report(self) -> int:
+        """打印汇总并返回退出码：0 = 全通过，1 = 有失败。"""
+        total = self.passed + len(self.failed)
+        if not self.failed:
+            print(f"\n  ✅ 断言全通过（{total} 条）")
+            return 0
+        print(f"\n  ❌ 断言失败 {len(self.failed)}/{total}：")
+        for what in self.failed:
+            print(f"     · {what}")
+        print("  脚本以非 0 退出码结束（run_all.py 会当场变红）——"
+              "改坏了哪条不变量，上面就是答案。")
+        return 1

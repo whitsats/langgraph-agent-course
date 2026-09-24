@@ -4,15 +4,32 @@
    把检索包装成一个工具，让模型自己决定要不要查。
 
 观察重点：知识库里没有的东西，它应该说"不知道"，而不是编。
+
+脚本自带断言（`_shared.Checks`）：知识库里**有**的事实必须带对（22:00 / 500 分），
+知识库里**没有**的必须承认不知道、且不得出现任何具体数字（编造就是在这里被抓的）。
+断言写在语义特征上（第 11 章），不比对整句话。失败即以非 0 退出码结束。
 """
 
-from _shared import get_embeddings, get_model, title
+import re
+import sys
+
+from _shared import Checks, get_embeddings, get_model, title
 
 from langchain.agents import create_agent
 from langchain_core.documents import Document
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.tools import tool
+
+CHECKS = Checks()
+
+# 承认不知道的说法（语义特征，不是唯一措辞——见第 11 章）
+UNSURE_MARKERS = ("不知道", "不确定", "没有", "未", "无法", "查不到", "抱歉", "暂无", "不包含")
+
+
+def says_dont_know(text: str) -> bool:
+    return any(marker in text for marker in UNSURE_MARKERS)
+
 
 # ── 小知识库（真实项目里换成你的产品手册 / 客服 FAQ）─────────────────────
 RAW_DOCS = [
@@ -73,23 +90,36 @@ def main() -> None:
         ),
     )
 
+    # (问题, 知识库里应当命中的事实特征；None = 知识库里没有，必须承认不知道)
     questions = [
-        "你们周六几点关门？",          # 知识库里有
-        "满多少分可以换咖啡？",        # 知识库里有
-        "你们卖咖啡豆吗？",            # 知识库里没有 → 应该承认不知道
+        ("你们周六几点关门？", "22"),          # 营业规则：周六 09:00-22:00
+        ("满多少分可以换咖啡？", "500"),      # 会员规则：满 500 分换中杯拿铁
+        ("你们卖咖啡豆吗？", None),            # 知识库里没有 → 应该承认不知道
     ]
 
-    for q in questions:
+    for q, expect_fact in questions:
         title(f"问：{q}")
         result = agent.invoke({"messages": [{"role": "user", "content": q}]})
 
         # 把工具调用过程打出来，方便看清"答案有没有依据"
+        used_retrieval = False
         for msg in result["messages"]:
             for call in getattr(msg, "tool_calls", None) or []:
+                used_retrieval = True
                 print(f"  🔍 检索: {call['args']}")
             if type(msg).__name__ == "ToolMessage":
                 print(f"  📄 查到: {msg.content[:80]}...")
-        print(f"  💬 回答: {result['messages'][-1].content}")
+        answer = str(result["messages"][-1].content)
+        print(f"  💬 回答: {answer}")
+
+        if expect_fact:
+            CHECKS.expect(used_retrieval, "回答前先调了 search_rules（不是凭记忆答）")
+            CHECKS.expect(expect_fact in answer, f"知识库里有 → 答案带上事实特征「{expect_fact}」")
+        else:
+            CHECKS.expect(says_dont_know(answer), "知识库里没有 → 明确承认不知道")
+            # 编造的指纹：冒出一个知识库里根本没有的规格/价格数字
+            CHECKS.expect(not re.search(r"\d+\s*(元|块|克|袋|包|斤|毫升|ml)", answer),
+                          "知识库里没有 → 没有编出价格/规格数字")
 
     title("下一步可以做什么")
     print("  1. 换成生产向量库：pgvector（Postgres 扩展）/ Chroma / Qdrant")
@@ -101,3 +131,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+    sys.exit(CHECKS.report())

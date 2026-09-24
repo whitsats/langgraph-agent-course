@@ -4,14 +4,20 @@
    调模型 → 模型要工具 → 执行工具 → 把结果塞回对话 → 再调模型 → 不要工具就结束
 
 看完你就明白框架替你兜了什么：状态累积、工具分发、错误重试、终止判定。
+
+脚本自带断言（`_shared.Checks`）：断言的是**循环行为**——没撞上步数上限、
+真的调了工具、数字算对了。任何一条失败，脚本以非 0 退出码结束（run_all 会变红）。
 """
 
 import json
+import sys
 
-from _shared import get_model, title
+from _shared import Checks, get_model, title
 
 from langchain.messages import ToolMessage
 from langchain.tools import tool
+
+CHECKS = Checks()
 
 MAX_STEPS = 6          # ★ 必须有上限，否则模型可能无限循环，烧钱又卡死
 
@@ -34,12 +40,13 @@ def calculate(expression: str) -> str:
 TOOLS = {t.name: t for t in (get_weather, calculate)}      # 名字 → 工具，用于分发
 
 
-def run_loop(question: str) -> str:
-    """核心：一条手写的 agent 循环。"""
+def run_loop(question: str) -> tuple[str, list[str], bool]:
+    """核心：一条手写的 agent 循环。返回 (回答, 调过的工具, 是否耗尽步数)。"""
     model = get_model(temperature=0)
     model_with_tools = model.bind_tools(list(TOOLS.values()))      # ★ 告诉模型有哪些工具
 
     messages = [{"role": "user", "content": question}]
+    called: list[str] = []
 
     for step in range(1, MAX_STEPS + 1):
         print(f"\n--- 第 {step} 轮：把 {len(messages)} 条消息发给模型 ---")
@@ -49,12 +56,14 @@ def run_loop(question: str) -> str:
         # ★ 终止条件 1：模型不再要求调用工具，说明它准备好回答了
         if not ai.tool_calls:
             print("--- 模型不再需要工具，循环结束 ---")
-            return ai.content
+            text = ai.content if isinstance(ai.content, str) else str(ai.content)
+            return text, called, False
 
         # ★ 执行模型要求的每个工具，并把结果回灌
         for call in ai.tool_calls:
             name, args, call_id = call["name"], call["args"], call["id"]
             print(f"    模型要求调用: {name}({args})")
+            called.append(name)
 
             tool_fn = TOOLS.get(name)
             if tool_fn is None:
@@ -69,13 +78,19 @@ def run_loop(question: str) -> str:
             messages.append(ToolMessage(content=str(output), tool_call_id=call_id))
 
     # ★ 终止条件 2：步数用尽。必须显式兜底，不能假装成功。
-    return f"达到最大步数 {MAX_STEPS}，未能完成。最后一条消息：{messages[-1].content!r}"
+    return (f"达到最大步数 {MAX_STEPS}，未能完成。最后一条消息：{messages[-1].content!r}",
+            called, True)
 
 
 def main() -> None:
     title("手写循环：问一个需要两步工具的问题")
-    answer = run_loop("上海今天多少度？如果明天升 3 度，明天多少度？")
+    answer, called, exhausted = run_loop("上海今天多少度？如果明天升 3 度，明天多少度？")
     print(f"\n最终回答：{answer}")
+
+    # 三条断言，正好对应手写循环里最容易写错的三件事
+    CHECKS.expect(not exhausted, "循环正常终止（没撞上 MAX_STEPS 上限）")
+    CHECKS.expect("get_weather" in called, "模型确实调用了天气工具（分发起作用了）")
+    CHECKS.expect("29" in answer, "答案算出了 29 度（26 + 3）")
 
     title("和框架对比")
     print("  手写这份代码里，下面这些都要你自己负责：")
@@ -89,3 +104,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+    sys.exit(CHECKS.report())

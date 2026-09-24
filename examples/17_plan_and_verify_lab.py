@@ -10,9 +10,17 @@
   4. generator-verifier：两个候选答案，外部验证器对账裁决
 
 贯穿的场景：月底给老板写经营报告（订单、品类营收、落成报告文件）。
+
+脚本自带断言（`_shared.Checks`）：坏计划必须被拒、计划必须收敛、断言过的步骤必须
+被复用、编造的候选必须被验证器挡下。任何一条失败，脚本以非 0 退出码结束——
+run_all.py 会当场变红，不用等人盯着输出看。
 """
 
+import sys
+
 import _shared  # noqa: F401  （导入时把 Windows 控制台切到 UTF-8）
+
+CHECKS = _shared.Checks()
 
 # ---------------------------------------------------------------------------
 # 场景数据与工具层（和第 16 章同一个咖啡店）
@@ -91,6 +99,8 @@ def exp1_plan_vs_one_shot() -> None:
         trace.append(f"{name}({arg}) {'✓' if ok else '✗'}")
         print(f"    {trace[-1]}  {out}")
         results.append(out)
+    CHECKS.expect(any("2026-13" in t and "✗" in t for t in trace),
+                  "实验 1：一口气式确实点错了月份（演示型断言）")
 
     # —— 做法 B：plan-and-execute。规划一次，执行交给确定性 runner ——
     print("\n  【做法 B：先出计划，再逐步执行】")
@@ -150,6 +160,7 @@ def exp2_plan_validation() -> None:
     print("  计划 A（干净）：")
     print("    " + " → ".join(f"{n}({a if isinstance(a, str) else a[0]})" for n, a in good_plan))
     print(f"    校验：{'✅ 通过，放行执行' if ok else '❌ ' + '；'.join(problems)}")
+    CHECKS.expect(ok, "干净计划通过静态校验")
 
     for label, plan in bad_plans:
         ok, problems = validate_plan(plan, ALLOWED_TOOLS, KNOWN_MONTHS, KNOWN_ORDER_IDS)
@@ -157,6 +168,7 @@ def exp2_plan_validation() -> None:
         print("    " + " → ".join(f"{n}({a if isinstance(a, str) else a[0]})" for n, a in plan))
         for p in problems:
             print(f"    ❌ 拒绝：{p}")
+        CHECKS.expect(not ok, f"{label}的坏计划被拒（{len(problems)} 处问题）")
 
     print("\n  这就是 ASI08（级联失败）「计划-执行之间加校验」的落地；")
     print("  第 16 章实验 3 那种「每步都合法、组合不合法」的外泄轨迹，")
@@ -174,14 +186,17 @@ ASSERTIONS = {
 }
 
 
-def run_with_verify(plan, max_rounds: int = 3) -> bool:
+def run_with_verify(plan, max_rounds: int = 3) -> tuple[bool, int]:
+    """返回 (是否收敛, 复用了几个断点)。"""
     passed: set[int] = set()                # 断点：已通过断言的步骤索引
+    skipped = 0
     for attempt in range(1, max_rounds + 1):
         print(f"\n  —— 第 {attempt} 轮执行 ——")
         failed = None
         for i, (name, arg) in enumerate(plan):
             if i in passed:
                 print(f"    {i + 1}. {name}（上轮已通过断言，断点复用，跳过）")
+                skipped += 1
                 continue
             ok, out = tool(name, arg)
             if ok and (name, arg) in ASSERTIONS:
@@ -194,7 +209,7 @@ def run_with_verify(plan, max_rounds: int = 3) -> bool:
             passed.add(i)
         if failed is None:
             print("    全部步骤通过断言 ✔")
-            return True
+            return True, skipped
         i, name, arg, out = failed
         print(f"    ⚠️ 第 {i + 1} 步失败 → 重规划（只修这一步，其余步骤原样保留）")
         if name == "revenue_by_category" and arg not in VALID_MONTHS:
@@ -204,7 +219,7 @@ def run_with_verify(plan, max_rounds: int = 3) -> bool:
         else:
             plan[i] = (name, arg)
             print("       replanner：本步重试一次")
-    return False
+    return False, skipped
 
 
 def exp3_assert_and_replan() -> None:
@@ -215,11 +230,13 @@ def exp3_assert_and_replan() -> None:
             ("write_report", ("reports/2026-08.md", "8 月经营报告（内容来自前两步的执行结果）"))]
     print("  初始计划：" + " → ".join(f"{n}({a if isinstance(a, str) else a[0]})"
                                      for n, a in plan))
-    done = run_with_verify(plan)
+    done, skipped = run_with_verify(plan)
 
     print(f"\n  结果：{'✅ 计划收敛' if done else '❌ 轮次耗尽'}；最终计划：")
     print("    " + " → ".join(f"{n}({a if isinstance(a, str) else a[0]})" for n, a in plan))
     print(f"    报告柜：{sorted(REPORTS)}")
+    CHECKS.expect(done, "计划最终收敛（坏的那一步被 replanner 修好）")
+    CHECKS.expect(skipped > 0, "第二轮复用了已通过断言的步骤（断点生效）")
     print("\n  对照 ReAct：模型自由发挥时会在坏步骤上原地打转或换个说法硬编；")
     print("  这里的失败是断言逼出来的具体错误，replanner 只需修那一步。")
     print("  第 2 轮里已通过断言的步骤直接复用、不再重跑——这就是第 06 章")
@@ -270,6 +287,8 @@ def exp4_generator_verifier() -> None:
     for c in checks2:
         print(f"    - {c}")
     print(f"    裁决：{'✅ 采纳' if ok2 else '❌ 拒绝'}")
+    CHECKS.expect(not ok, "编造的候选被验证器拒绝（对不上台账）")
+    CHECKS.expect(ok2, "与台账一致的候选被采纳")
     print(f"\n  最终给老板的答案来自候选 {'2' if ok2 else '?'}——不是最自信的，是对得上台账的。")
     print("  为什么不让模型\"自己检查自己\"：同一个上下文、同一套偏见，")
     print("  很容易顺着自己刚才的话再圆一遍。验证器必须在外部：工具台账、")
@@ -284,3 +303,4 @@ if __name__ == "__main__":
     exp4_generator_verifier()
     print("\n四个实验跑完。计划不是装饰：它是能被校验、被执行、被修复的对象。")
     print("回去读第 17 章（附录D）的「跟着做」一节，把断言和校验搬进你自己的链路。")
+    sys.exit(CHECKS.report())

@@ -4,15 +4,22 @@
 关键是 interrupt() 让程序停在中间，把现场存起来，等人回答再继续。
 
 这和第 07 章开头那个离线例子（07a）是同一个机制，区别是这里的"草案"由模型生成。
+
+脚本自带断言（`_shared.Checks`）：小额**不该**中断、大额**必须**中断，
+而且人工拒绝后绝不能走成受理（越权比答错严重得多）。失败即以非 0 退出码结束。
 """
+
+import sys
 
 from typing_extensions import TypedDict
 
-from _shared import get_model, title
+from _shared import Checks, get_model, title
 
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, interrupt
+
+CHECKS = Checks()
 
 APPROVAL_THRESHOLD = 500          # 超过这个金额，必须人工审批
 
@@ -79,7 +86,9 @@ def build_graph():
     return builder.compile(checkpointer=InMemorySaver())
 
 
-def run(graph, request: str, amount: int, thread_id: str, human_says: bool | None = None) -> None:
+def run(graph, request: str, amount: int, thread_id: str,
+        human_says: bool | None = None) -> dict:
+    """跑一轮。返回 {是否中断, 最终是否受理, 结果文本, 模型草案}，供断言检查。"""
     config = {"configurable": {"thread_id": thread_id}}
     state_in = {"request": request, "amount": amount, "draft": "", "approved": False, "result": ""}
 
@@ -88,26 +97,37 @@ def run(graph, request: str, amount: int, thread_id: str, human_says: bool | Non
 
     if not pending:
         print(f"  → 直接完成：{result['result'][:50]}")
-        return
+        return {"interrupted": False, "approved": bool(result.get("approved")),
+                "result": result.get("result", ""), "draft": result.get("draft", "")}
 
     print(f"\n  ⏸  已暂停，等待人工。审批内容：{pending[0].value if pending else ''}")
     decision = human_says if human_says is not None else True
     print(f"  人工回答：{'同意' if decision else '拒绝'}")
     final = graph.invoke(Command(resume=decision), config)
     print(f"  → 最终结果：{final['result'][:60]}")
+    return {"interrupted": True, "approved": bool(final.get("approved")),
+            "result": final.get("result", ""), "draft": final.get("draft", "")}
 
 
 def main() -> None:
     graph = build_graph()
 
     title("场景 1：小额退款，自动通过（不会中断）")
-    run(graph, "咖啡洒了想退款", 38, "case-1")
+    r1 = run(graph, "咖啡洒了想退款", 38, "case-1")
+    CHECKS.expect(not r1["interrupted"], "38 元没超阈值 → 不该打断等人（阈值写在代码里）")
+    CHECKS.expect(bool(r1["draft"]), "模型确实起草了回复（draft 非空）")
+    CHECKS.expect("已受理" in r1["result"], "小额单直接走受理分支")
 
     title("场景 2：大额退款，人工同意")
-    run(graph, "整单退款，活动取消", 1280, "case-2", human_says=True)
+    r2 = run(graph, "整单退款，活动取消", 1280, "case-2", human_says=True)
+    CHECKS.expect(r2["interrupted"], "1280 元超阈值 → 必须中断等人点头")
+    CHECKS.expect("已受理" in r2["result"], "人工同意后才走受理分支")
 
     title("场景 3：大额退款，人工拒绝")
-    run(graph, "想退三个月前的订单", 2000, "case-3", human_says=False)
+    r3 = run(graph, "想退三个月前的订单", 2000, "case-3", human_says=False)
+    CHECKS.expect(r3["interrupted"], "2000 元超阈值 → 必须中断等人点头")
+    CHECKS.expect(not r3["approved"] and "已驳回" in r3["result"],
+                  "人工拒绝后绝不能走成受理（越权比答错严重）")
 
     title("这套做法的价值")
     print("  - 模型负责起草，人负责拍板，各自做擅长的事")
@@ -118,3 +138,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+    sys.exit(CHECKS.report())

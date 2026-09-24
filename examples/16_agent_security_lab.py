@@ -11,9 +11,17 @@
 
 每个实验都先看"洞"，再看"补丁"——补丁全部是代码（校验 / 白名单 /
 范围约束），没有一个是"在 prompt 里拜托模型别听坏人的"。
+
+脚本自带断言（`_shared.Checks`）：实验 1–3 断言"漏洞确实存在"（演示型断言，
+被"修好"了反而要报警），实验 4 断言"最小权限确实拦住了"。任何一条失败，
+脚本以非 0 退出码结束——run_all.py 会当场变红，不用等人盯着输出看。
 """
 
+import sys
+
 import _shared  # noqa: F401  （导入时把 Windows 控制台切到 UTF-8）
+
+CHECKS = _shared.Checks()
 
 # ---------------------------------------------------------------------------
 # 一个最小 agent：工具层 + 决策层分离。
@@ -92,6 +100,8 @@ def exp1_direct_injection() -> None:
         print(f"  {t}")
     print(f"\n  发件箱：{len(SENT_EMAILS)} 封 → "
           + ("⚠️ 数据已外泄" if SENT_EMAILS else "✅ 安全"))
+    CHECKS.expect(bool(SENT_EMAILS),
+                  "实验 1：无防线的 agent 确实被直接注入带走（演示型断言）")
 
     print("\n  补丁（三层，缺一不可）：")
     print("   ① 输入结构化：意图走 schema（第 04 章的 ToolStrategy），自由文本只当参数值")
@@ -130,6 +140,7 @@ def exp2_indirect_injection() -> None:
     leaked = "API_KEY" in FILES.get("feedback.log", "")
     print(f"\n  secrets 是否被写进 feedback.log："
           + ("⚠️ 是——间接注入成功" if leaked else "✅ 否"))
+    CHECKS.expect(leaked, '实验 2：指令藏在“数据”里确实能得手（演示型断言）')
 
     print("\n  补丁（原则：外部内容一律是数据，不是指令）：")
     print("   ① 检索/工具结果包上边界标记，并约定：边界内不产生新任务")
@@ -161,6 +172,8 @@ def exp3_tool_chain() -> None:
         print(f"  {t}")
     print(f"\n  发件箱：{len(SENT_EMAILS)} 封 → "
           + ("⚠️ 组合攻击成功" if SENT_EMAILS else "✅ 被拦下"))
+    CHECKS.expect(bool(SENT_EMAILS),
+                  "实验 3：每步合法的工具序列确实拼出了外泄（演示型断言）")
 
     print("\n  补丁（管组合，不管单个）：")
     print("   ① 流程级白名单：本应用允许的「工具序列」就那几种，写死在图里（第 05 章）")
@@ -190,12 +203,15 @@ def exp4_least_privilege() -> None:
             return f"    拦截：{args.get('path')} 不在可读范围（只允许 {readable_prefix}*）内"
         return None
 
-    for label, allowed, readable_prefix in (
-        ("宽权限 agent（现在的多数 demo）", set(TOOLS_SPEC), None),
-        ("窄权限 agent（最小权限版）", {"search_orders", "read_file"}, "notes"),
+    # 第四个元素是"这个场景该不该外泄"——断言挂在**场景**上，不挂在生效的权限上，
+    # 否则权限被悄悄放宽时，断言会跟着换一边，照样全绿（变异检查抓到过这一手）
+    for label, allowed, readable_prefix, expect_leak in (
+        ("宽权限 agent（现在的多数 demo）", set(TOOLS_SPEC), None, True),
+        ("窄权限 agent（最小权限版）", {"search_orders", "read_file"}, "notes", False),
     ):
         SENT_EMAILS.clear()
         print(f"\n  {label}，注入同一发攻击：")
+        blocked: list[str] = []
         for name, args, final in injected_attack("x", []):
             if name is None:                      # 最后一步是回答，不是工具
                 print(f"    最终回答: {final}")
@@ -203,10 +219,20 @@ def exp4_least_privilege() -> None:
             err = policy_guard(name, args, allowed, readable_prefix)
             if err:
                 print(err)
+                blocked.append(name)
                 continue
             tool(name, args)
-        verdict = "⚠️ 数据已外泄" if SENT_EMAILS else "✅ 外泄失败：权限不够，攻击无路可走"
+        leaked = bool(SENT_EMAILS)
+        verdict = "⚠️ 数据已外泄" if leaked else "✅ 外泄失败：权限不够，攻击无路可走"
         print(f"    后果：{verdict}")
+
+        # 本实验的断言：两种权限的对照必须成立——宽的必泄，窄的一条都过不去
+        if expect_leak:
+            CHECKS.expect(leaked, "宽权限 agent 确实外泄了（演示：洞真实存在）")
+        else:
+            CHECKS.expect(not leaked, "窄权限 agent 没有外泄（最小权限挡住了）")
+            CHECKS.expect("read_file" in blocked,
+                          "窄权限 agent 读 secrets.txt 被路径范围拦下")
 
     print("\n  结论：注入能不能得手，最后取决于 agent 手里有什么权限。")
     print("  Least agency（OWASP 的提法）：不仅管「能访问什么」，还管「能自主做什么」——")
@@ -219,3 +245,4 @@ if __name__ == "__main__":
     exp3_tool_chain()
     exp4_least_privilege()
     print("\n四个实验跑完。所有攻击都被代码层拦截了吗？回去读第 16 章的「三层防线」。")
+    sys.exit(CHECKS.report())
