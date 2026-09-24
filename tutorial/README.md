@@ -42,12 +42,13 @@
 | 13 毕业项目 | `../virtual_rnd_center/` | — |
 | 14 附录 | —（随时查） | — |
 | 15 附录B | `../tools/mcp/test_docs_server.py`（MCP server 回归，14 项断言）+ 你自己的 VS Code | 否 |
+| 16 附录C：Agent 安全体系 | `16_agent_security_lab.py` | 否 |
 
 有章号没有对应文件，是故意的：01 只有讲义，11 用 `run_all.py` 当回归，13 用的是案例工程。
 
 ---
 
-## 目录（15 章，全部已写完）
+## 目录（16 章，全部已写完）
 
 ### 第一部分：上手（先把东西跑起来）
 
@@ -84,6 +85,7 @@
 | 13 | [毕业项目：重写真实链路](13-毕业项目.md) | `../virtual_rnd_center/` | **1 周** |
 | 14 | [附录：API 速查与排错](14-附录.md) | — | 随时查 |
 | 15 | [附录B：在 VS Code 智能体模式里做真实开发](15-附录B-VSCode智能体模式.md) | 你的 VS Code + 本仓库 `.github/` 配置 | 1 天 |
+| 16 | [附录C：Agent 安全体系](16-附录C-Agent安全体系.md) | `16_agent_security_lab.py` | 1 天 |
 
 ---
 
@@ -161,7 +163,9 @@ uv run python examples/00_env_check.py --live
 | 需要 Key 的组（其余 9 个） | ✅ **9/9 通过**（最慢的是 `08b_rag_agent` 和 `10_mcp_docs_server`，几十秒到一分钟） |
 | 核心 API 可用性（`00_env_check.py`） | ✅ 8/8 可用；`--live` 会打印 `✅ 会调用工具` |
 
-一键复现：`uv run python examples/run_all.py`（离线 5 项 + 在线 9 项，跑完给结果表）。
+一键复现：`uv run python examples/run_all.py`（离线 6 项 + 在线 9 项，跑完给结果表）。
+
+> 2026-09-24 增补：离线组收编第 16 章安全实验（`16_agent_security_lab.py`，0.1s），`--offline` 现为 **6/6 通过**；上表仍是 2026-09-23 那次全量实跑的存档。
 
 实跑之后确认的事（都已回写进正文或示例）：
 

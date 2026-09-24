@@ -27,6 +27,7 @@ OFFLINE = [
     ("06a_persistence_resume.py", "second"),
     ("07a_human_approval_offline.py", None),
     ("08a_index_offline.py", None),
+    ("16_agent_security_lab.py", None),
 ]
 
 LIVE = [

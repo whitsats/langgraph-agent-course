@@ -52,7 +52,7 @@ cd examples && uv run python 05_graph_basics.py   # 从 examples/（uv 会自动
 `05_graph_basics.py` 就是**第 05 章**的配套例子 —— 读到哪一章，就跑哪个数字开头的文件，不用查表。
 
 同一章需要多个例子时用 `a`/`b`/`c` 区分（第 06 章要三个：`06a` 落库、`06b` 短期记忆、`06c` 长期记忆）。
-几个章号没有对应文件，那是故意的：**01** 只有讲义没有例子，**11** 直接用 `run_all.py` 当回归测试，**13** 用的是 `../virtual_rnd_center/`，**09** 复用 `08a_index_offline.py`（都是索引与检索那些动作），**14** 是速查表不用例子，**15** 的“例子”就是你自己的 VS Code（配套 MCP server 在 `../tools/mcp/docs_server.py`）。
+几个章号没有对应文件，那是故意的：**01** 只有讲义没有例子，**11** 直接用 `run_all.py` 当回归测试，**13** 用的是 `../virtual_rnd_center/`，**09** 复用 `08a_index_offline.py`（都是索引与检索那些动作），**14** 是速查表不用例子，**15** 的“例子”就是你自己的 VS Code（配套 MCP server 在 `../tools/mcp/docs_server.py`）；**16** 的例子不调模型——离线模拟“模型的决策”，专门复现攻击、看补丁怎么拦。
 
 ## 第一组：不需要 Key（离线可跑）
 
@@ -63,6 +63,7 @@ cd examples && uv run python 05_graph_basics.py   # 从 examples/（uv 会自动
 | `06a_persistence_resume.py` | 06 | SQLite 落盘 + `thread_id` | **分两次运行**：关掉进程，状态还在 |
 | `07a_human_approval_offline.py` | 07 | `interrupt()` 暂停 + `Command(resume=)` | 程序停在半路等人点头；恢复时节点从头重跑 |
 | `08a_index_offline.py` | 08 / 09 | 切分 / 元数据过滤 / 同 id 覆盖 / 删除 | 不花钱就能把知识库的索引动作全测一遍 |
+| `16_agent_security_lab.py` | 16 | 四个安全攻击实验（注入 / 投毒 / 权限） | ⚠️ 注入得手、✅ 补丁拦截——重点看实验 4 两种权限的两行对比 |
 
 ## 第二组：需要 Key
 
@@ -131,6 +132,8 @@ uv run python examples/run_all.py --only 06    # 只跑第 06 章那一组（06a
 
   通过 14/14
 ```
+
+> **2026-09-24 增补**：离线组收编 `16_agent_security_lab.py`（第 16 章安全攻击实验，离线 0.1s），`run_all.py --offline` 现为 **6/6 通过**。
 
 > **免费额度有速率上限**：一口气连跑十几个例子会撞 `429`
 > （报错原文：`您已达到免费用户的 API 速率限制`）。这不是代码错。

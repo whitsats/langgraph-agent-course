@@ -516,4 +516,4 @@ process.stdout.write(JSON.stringify(decision));
 
 ---
 
-← 上一章 [14 附录：API 速查与排错](14-附录.md) ｜ 回到 [目录](README.md)
+← 上一章 [14 附录：API 速查与排错](14-附录.md) ｜ 下一章 → [16 附录C：Agent 安全体系](16-附录C-Agent安全体系.md) ｜ 回到 [目录](README.md)
