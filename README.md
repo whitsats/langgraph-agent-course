@@ -8,7 +8,7 @@
 手机上也能读、章内可跳转。站点由 `tutorial/` 直接生成，改完讲义推到 `main` 会自动重建，
 详见下面的“站点怎么维护”。
 
-1. **`tutorial/`** ← 主入口（讲义，17 章）。从 [`tutorial/00-准备工作.md`](tutorial/00-准备工作.md) 开始，
+1. **`tutorial/`** ← 主入口（讲义，18 章）。从 [`tutorial/00-准备工作.md`](tutorial/00-准备工作.md) 开始，
    或先看 [`tutorial/README.md`](tutorial/README.md) 的目录与三条学习路径。
    **每章配一个能直接跑的例子**，读一章跑一个：
 
@@ -23,7 +23,7 @@
    > ✅ 实测状态（2026-09-22）：网关 `https://api.agnes-ai.cn/v1` 下**全部例子 14/14 通过**（离线 5 项 + 在线 9 项，`06a` 跑两次）。
    > 先跑 `00_env_check.py --live`，看到 `✅ 会调用工具` 再往下读。若报 `401 Invalid token`，那是 **Key 的问题，不是代码问题**（排查方法见 `tutorial/README.md` 的“实测状态”节）。
 
-2. **`LEARNING_PLAN.md`** ← 时间与取舍视角的配套。开头是一张**完整度复核矩阵**（30 项能力面 × 覆盖位置 × 深度取舍），后面是 5 周核心计划 + 按需扩展：手写 Agent Loop、LangChain 模型层、LangGraph 编排、**状态数据库（checkpointer 各后端）**、记忆三型、**知识库 / RAG / 向量数据库（pgvector、元数据过滤、混合检索、重排、增量索引）**、MCP、多智能体、Deep Agents、沙箱权限、评测、前端接入、部署；最后一周用 LangGraph 重写 `virtual_rnd_center/` 的 MVP 链路。
+2. **`LEARNING_PLAN.md`** ← 时间与取舍视角的配套。开头是一张**完整度复核矩阵**（38 项能力面 × 覆盖位置 × 深度取舍），后面是 5 周核心计划 + 按需扩展：手写 Agent Loop、LangChain 模型层、LangGraph 编排、**状态数据库（checkpointer 各后端）**、记忆三型、**知识库 / RAG / 向量数据库（pgvector、元数据过滤、混合检索、重排、增量索引）**、MCP、多智能体、Deep Agents、沙箱权限、评测、前端接入、部署；最后一周用 LangGraph 重写 `virtual_rnd_center/` 的 MVP 链路。
 3. **`examples/`** ← 配套示例，**每个概念一个能直接跑的小例子**（一半不需要 API Key）。默认走 Agnes 免费额度，填一行 `AGNES_API_KEY` 就能跑全部。索引见 `examples/README.md` 与 `LEARNING_PLAN.md` 第 16 节。
 4. 读到毕业项目那章（或想提前看看要重写什么）时，再进 `virtual_rnd_center/`。
 
@@ -31,19 +31,20 @@
 
 ```
 .
-├── tutorial/                 # ★ 讲义：17 章，从心智模型到毕业项目 + 三篇附录
+├── tutorial/                 # ★ 讲义：18 章，从心智模型到毕业项目 + 四篇附录
 │   ├── README.md             #   目录、三条学习路径、开始之前
 │   ├── 00–04                 #   上手：环境、心智模型、第一次跑通、手写循环、工具
 │   ├── 05–07                 #   编排：状态与 reducer、落库与记忆、人工审批
 │   ├── 08–10                 #   知识：RAG 决策、向量库与检索质量、MCP 与扩展
-│   └── 11–17                 #   交付：工程化、精读小项目、毕业项目、附录、VS Code 附录B、安全附录C、规划附录D
+│   └── 11–18                 #   交付：工程化、精读小项目、毕业项目、附录、VS Code 附录B、安全附录C、规划附录D、交接附录E
 ├── LEARNING_PLAN.md          # 学习计划（时间与完整度视角）
 ├── README.md                 # 本文件：导航
 ├── pyproject.toml            # 根项目定义：教程/示例的依赖清单 + 索引源
 ├── uv.lock                   # 锁定版本（实测环境：langchain 1.4.2 / langgraph 1.2.12）
 ├── examples/                 # 配套示例：文件名开头的数字 = 讲义章号
 │   ├── README.md             #   示例索引、命名规则与运行方式
-│   ├── 00、05、06a、07a、08a   #   前五个不需要 Key（离线可跑）
+│   ├── 00、05、06a、07a、08a、
+│   │   16、17、18              #   不需要 Key（离线可跑，共 8 项）
 │   ├── 其余 9 个               #   需要一个模型 Key
 │   ├── 12_mini_project_coffee_shop.py  #   完整小项目：把零件拼成可交付形态
 │   └── 06c_long_term_memory.py         #   长期记忆（Store）：跨会话记住同一个人

@@ -133,6 +133,11 @@ async with MCPAdapter(DOCS_SERVER) as adapter:
 2. **交接包里放"结论 + 依据"，不放过程。**子 agent 的中间推理留在它自己的上下文里，带回去的只有结果和指向结果的引用（第 15 章 forked skill 的 `context: fork` 就是这个思想的官方化）。
 3. **契约要测试。**父 agent 依赖的每个字段，写断言。交接是最容易静默坏掉的地方——子 agent 改了返回格式，父 agent 不会报错，只会"变笨"。
 
+这三条在这里只是结论，第 18 章（附录E）把它展开成了可跑的东西：三件套 → **四层契约**
+（字段 / 类型 / 不变式 / 禁区），再加**通道三件套**（身份 / 完整性 / 防重放）与
+"交接包里的字段是数据不是指令"，配一个离线实验室 `18_handoff_contract_lab.py`——
+你在这里学的三件套，那里能跑、能测、能被改坏。
+
 **验收动作**：拿第 12 章的小项目对照一遍——classify 节点传给 answer/approve 的就是一份手工交接包：结构化意图（目标）+ 原始输入（引用）+ 下游节点期望的字段（格式约定）。
 
 ---
@@ -201,6 +206,7 @@ async with MCPAdapter(DOCS_SERVER) as adapter:
 
 - MCP 页（`MCPAdapter` 全部用法与 target 推断）：`https://docs.langchain.com/oss/python/langchain/mcp`
 - 多智能体（四种模式详解）：`https://docs.langchain.com/oss/python/langchain/multi-agent`
+- 交接的落地版本（四层契约 + 通道认证）：第 18 章（附录E）+ `18_handoff_contract_lab.py`
 - Deep Agents：`https://docs.langchain.com/oss/python/deepagents/overview`
 - 沙箱执行：`https://docs.langchain.com/oss/python/langchain/sandbox`
 

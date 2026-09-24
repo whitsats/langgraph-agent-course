@@ -29,6 +29,7 @@ OFFLINE = [
     ("08a_index_offline.py", None),
     ("16_agent_security_lab.py", None),
     ("17_plan_and_verify_lab.py", None),
+    ("18_handoff_contract_lab.py", None),
 ]
 
 LIVE = [

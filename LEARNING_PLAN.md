@@ -57,11 +57,12 @@
 | 30 | TypeScript 轨道 | — | ✕ | 你已选 Python |
 | 31 | 编辑器内智能体（VS Code 定制体系） | 第 15 章（附录B） | ★★ | BYOK / 指令 / MCP / Agent / Skill / Hook，配置即代码 |
 | 32 | 浏览器 / computer-use | 第 15 章（阶段 2.5） | ◐ | API → DOM 自动化 → 视觉操作三层，能低不高 |
-| 33 | 多智能体上下文契约 | 第 10 章 | ★★ | 交接包三件套 + 契约要测试，四种模式共同的真难点 |
+| 33 | 多智能体上下文契约 | 第 10 章 | ★★ | 交接包三件套 + 契约要测试；通道认证与注入防护见第 18 章（附录E） |
 | 34 | 模型路由与成本工程 | 第 11 章 | ★★ | 节点级路由 / 自动路由 / 缓存与批处理 |
 | 35 | Agentic 评测（任务级） | 第 11 章 | ★★ | 轨迹断言：调对工具、轨迹有界、终态正确 |
 | 36 | **Agent 安全体系（OWASP Agentic Top 10）** | 第 16 章（附录C） | ★★ | 注入 / 工具投毒 / 最小权限，Least agency + 强可观测 |
 | 37 | 规划与自我验证（plan-and-execute） | 第 17 章（附录D） | ★★ | 计划校验 / 执行断言 + 重规划 / generator-verifier |
+| 38 | 多智能体交接契约（通道认证） | 第 18 章（附录E） | ★★ | 四层契约 / 通道三件套 / 字段是数据 |
 
 ★ 必学 ／ ◐ 知道即可、用时查 ／ ○ 暂不需要 ／ ✕ 明确不做
 
@@ -783,7 +784,7 @@ uv run python -c "from importlib.metadata import version; print(version('langcha
 
 概念光看懂没用，必须手上有能跑的东西。`examples/` 里每个概念配一个小例子，用同一个日常场景（咖啡店）贯穿。
 
-### 16.1 先跑这五个：不需要 API Key
+### 16.1 先跑这八个：不需要 API Key
 
 ```bash
 uv venv && uv add langgraph langchain-core langchain-text-splitters langgraph-checkpoint-sqlite
@@ -797,6 +798,9 @@ uv run python examples/00_env_check.py
 | `06a_persistence_resume.py` | 06 | 状态数据库（§7.2） | **分两次运行**：关掉进程后状态还在（真落盘） |
 | `07a_human_approval_offline.py` | 07 | 人工中断（§7.4） | 程序停半路等人回答；恢复时节点从头重跑 |
 | `08a_index_offline.py` | 08 / 09 | 索引 / 过滤（§8.3–8.5） | 切分、元数据过滤、同 id 覆盖、删除——不花钱 |
+| `16_agent_security_lab.py` | 16 | 安全体系（§1.1 第 36 项） | 注入能得手、补丁能拦；最小权限只给"够用"那一行 |
+| `17_plan_and_verify_lab.py` | 17 | 规划与自我验证（§1.1 第 37 项） | 一口气式收尾会编造数字；验证器把编造的候选挡回去 |
+| `18_handoff_contract_lab.py` | 18 | 交接契约 / 通道认证（§1.1 第 38 项） | 自由文本交接丢依据；坏包死在门口；带毒字段不产生动作 |
 
 ### 16.2 再跑这些：需要一个模型 Key
 
@@ -829,9 +833,10 @@ uv run python examples/run_all.py --only 06  # 只跑第 06 章那一组（06a/0
 
 ### 16.3 关于示例的说明
 
-- 全部文件已在 `langchain 1.4.2` / `langgraph 1.2.12` / Python 3.13 上**实测通过**（网关 `https://api.agnes-ai.cn/v1`）：离线组 5/5，需要 Key 的组 9/9。一键回归：`uv run python examples/run_all.py`。
+- 全部文件已在 `langchain 1.4.2` / `langgraph 1.2.12` / Python 3.13 上**实测通过**（网关 `https://api.agnes-ai.cn/v1`）：离线组 8/8（2026-09-24 增补第 16 / 17 / 18 章的三个离线实验），需要 Key 的组 9/9。一键回归：`uv run python examples/run_all.py`。
 - 所有“需要 Key”的例子都从环境变量读模型配置，**换任何 OpenAI 兼容网关都不用改代码**（`MODEL` / `MODEL_BASE_URL` / `MODEL_API_KEY`）。
 - 示例刻意避开“抓博客做 RAG”那种一上来就复杂的东西，用咖啡店规则、订单审核这类日常场景。
+- `mutation_check.py` 是**断言可信度**的自检（`run_all.py` 的下一层）：把关键不变量逐个**故意改坏**，看示例是不是真的变红；改坏了还全绿 = 那处检查是装饰品。改动离线实验后跟 `--offline` 一起跑（秒级，不需要 Key）。
 - `12_mini_project_coffee_shop.py` 是毕业项目之前的热身：它已经具备一个可交付小项目的骨架，只缺持久化、评测与 trace。
 - `06c_long_term_memory.py` 专门补上第 5 项打卡内容（记忆）：Store 的基本动作 + agent 跨 thread 记住同一个用户。
 

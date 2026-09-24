@@ -44,12 +44,13 @@
 | 15 附录B | `../tools/mcp/test_docs_server.py`（MCP server 回归，14 项断言）+ 你自己的 VS Code | 否 |
 | 16 附录C：Agent 安全体系 | `16_agent_security_lab.py` | 否 |
 | 17 附录D：规划与自我验证 | `17_plan_and_verify_lab.py` | 否 |
+| 18 附录E：多智能体交接契约 | `18_handoff_contract_lab.py` | 否 |
 
 有章号没有对应文件，是故意的：01 只有讲义，11 用 `run_all.py` 当回归，13 用的是案例工程。
 
 ---
 
-## 目录（17 章，全部已写完）
+## 目录（18 章，全部已写完）
 
 ### 第一部分：上手（先把东西跑起来）
 
@@ -88,6 +89,7 @@
 | 15 | [附录B：在 VS Code 智能体模式里做真实开发](15-附录B-VSCode智能体模式.md) | 你的 VS Code + 本仓库 `.github/` 配置 | 1 天 |
 | 16 | [附录C：Agent 安全体系](16-附录C-Agent安全体系.md) | `16_agent_security_lab.py` | 1 天 |
 | 17 | [附录D：规划与自我验证](17-附录D-规划与自我验证.md) | `17_plan_and_verify_lab.py` | 1 天 |
+| 18 | [附录E：多智能体交接契约](18-附录E-多智能体交接契约.md) | `18_handoff_contract_lab.py` | 1 天 |
 
 ---
 
@@ -165,9 +167,9 @@ uv run python examples/00_env_check.py --live
 | 需要 Key 的组（其余 9 个） | ✅ **9/9 通过**（最慢的是 `08b_rag_agent` 和 `10_mcp_docs_server`，几十秒到一分钟） |
 | 核心 API 可用性（`00_env_check.py`） | ✅ 8/8 可用；`--live` 会打印 `✅ 会调用工具` |
 
-一键复现：`uv run python examples/run_all.py`（离线 6 项 + 在线 9 项，跑完给结果表）。
+一键复现：`uv run python examples/run_all.py`（离线 8 项 + 在线 9 项，跑完给结果表）。
 
-> 2026-09-24 增补：离线组收编第 16 章安全实验（`16_agent_security_lab.py`）与第 17 章规划实验（`17_plan_and_verify_lab.py`），`--offline` 现为 **7/7 通过**；上表仍是 2026-09-23 那次全量实跑的存档。
+> 2026-09-24 增补：离线组收编第 16 章安全实验（`16_agent_security_lab.py`）、第 17 章规划实验（`17_plan_and_verify_lab.py`）与第 18 章交接实验（`18_handoff_contract_lab.py`），`--offline` 现为 **8/8 通过**；另加 `mutation_check.py`——把 16 / 17 / 18 章的关键不变量逐个改坏，验证断言真的会红，首跑 **15/15 被杀死**（第一次跑挂了两条"检查互相遮挡"，第二次暴露类型层没有用例，均已修）。另外 16 / 17 / 18 三个实验室的检查已从"只打印"改成**真断言**（失败即非 0 退出，共 6 + 9 + 19 条），`run_all.py --offline` 的 ✅ 现在是真的 ✅；上表仍是 2026-09-23 那次全量实跑的存档。
 
 实跑之后确认的事（都已回写进正文或示例）：
 
