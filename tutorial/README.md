@@ -41,7 +41,7 @@
 | 12 精读小项目 | `12_mini_project_coffee_shop.py` | 是 |
 | 13 毕业项目 | `../virtual_rnd_center/` | — |
 | 14 附录 | —（随时查） | — |
-| 15 附录B | —（例子是 VS Code 配置本身） | — |
+| 15 附录B | `../tools/mcp/test_docs_server.py`（MCP server 回归，14 项断言）+ 你自己的 VS Code | 否 |
 
 有章号没有对应文件，是故意的：01 只有讲义，11 用 `run_all.py` 当回归，13 用的是案例工程。
 

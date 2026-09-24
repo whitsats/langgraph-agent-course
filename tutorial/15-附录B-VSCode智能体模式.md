@@ -19,6 +19,8 @@
 
 **配套文件**：本章用到的所有配置都**已随本仓库提供**——`tools/mcp/docs_server.py`（MCP server，已实测）、
 `.github/` 下的指令 / Agent / Skill / Hook、根目录 `.mcp.json`。你可以逐个打开对照着读。
+MCP server 还配了离线回归测试 `tools/mcp/test_docs_server.py`（14 项断言，不需要 Key、不需要打开 VS Code）——
+写它的时候脚本自己还踩了一遍第 00 章的 GBK 坑（打印 `✓` 直接崩），修法就是示例里现成的 `setup_console()`。
 本章的"例子"就是你自己的 VS Code——它本身就是那台跑步机。
 
 ---
@@ -378,6 +380,8 @@ process.stdout.write(JSON.stringify(decision));
 - Hook 以 harness 进程的权限执行——**把它当可执行代码 review**，别人的仓库里带 hook 配置时尤其如此
 - Hook 输入一律当不可信：JSON 解析后再用，别直接拼进 shell
 - 密钥只进密钥存储，不进 hook 配置、脚本和输出
+- **stdout 只留给协议**：决策 JSON 用 `JSON.stringify` 写 stdout；调试信息走 stderr
+（输出面板的 Hooks 通道看得到），混进 stdout 会破坏事件解析
 
 ---
 
@@ -455,10 +459,30 @@ process.stdout.write(JSON.stringify(decision));
 | 团队拿不到我的 MCP server | 配置写进了 `.vscode/mcp.json`（本仓库 gitignore 了它） | 共享配置放根目录 `.mcp.json`（`mcpServers` 顶层键） |
 | Copilot 会话里 MCP 工具不见了 | Agent Host 不直接读 `.vscode/mcp.json` | 用工作区 `.mcp.json` 或用户级 `~/.copilot/mcp-config.json` |
 | `Cannot have more than 128 tools per request` | 挂的工具太多 | 工具选择器里整组关掉不相关 server |
+| `#` 菜单和工具列表里都没有我的 server，也没报错 | server 启动失败 / 没信任 / 命令不可用 | `MCP: List Servers` 看状态，`MCP: Show Server Output` 看启动日志；`uv` 必须在 PATH 里 |
+| hook 脚本里 `console.log` 调试后 agent 行为异常 | stdout 被调试输出污染，它只留给决策 JSON | 调试走 stderr；决策 JSON 用 `JSON.stringify` 写 stdout |
 | 老教程的 `from mcp.server.fastmcp import FastMCP` 报 `ModuleNotFoundError` | **mcp 2.x 把 FastMCP 改名为 `MCPServer`**（`mcp.server.mcpserver`） | 用本章的 2.x 写法；或按官方迁移指南临时 `mcp<2` |
 | Agent 一顿操作把额度跑光 | 多轮工具调用 + 连跑测试很费 token；免费额度有 429 限速 | 先用离线组验证；撞 429 等 20s 再试（第 00 章实测过） |
 | hook 脚本 print 中文直接崩 | Windows GBK 控制台（第 00 章的老坑在 hook 里重演） | hook 输出用英文或 ASCII；要中文就设 `PYTHONIOENCODING=utf-8` |
 | 有人推荐你用 `.prompt.md` 提示文件 | prompt files 已弃用（Agent Host 不加载），官方建议迁移成 skill | 新东西一律写 skill |
+
+---
+
+## 知道就好（本章没展开的官方能力，免得你翻文档时陌生）
+
+这些在官方文档里都有一席之地，但**对你现在的项目不是刚需**——知道存在、想用时知道去哪查，就够了：
+
+| 能力 | 一句话 | 官方文档 |
+|---|---|---|
+| Agents Window | 独立的智能体窗口：跨工作区派任务、多窗口接同一个会话（1.139 还支持在远程 Dev Container 里跑会话） | `docs/agents/run/agents-window` |
+| MCP Resources | 把 server 侧的只读数据当上下文附给提问（Add Context → MCP Resources），与工具互补 | `docs/agent-customization/mcp-servers` |
+| MCP Prompts | server 预置的提示模板，聊天里 `/<server>.<prompt>` 调用 | 同上 |
+| MCP Apps | server 直接在聊天里渲染交互式 UI（表单、可视化） | `blogs/2026/01/26/mcp-apps-support` |
+| MCP 沙箱 | 给本地 stdio server 限文件/网络访问；**Windows 上不可用** | `docs/agent-customization/mcp-servers` |
+| forked skill | `context: fork`：skill 在独立子 agent 里跑，只把结果带回主对话（保上下文窗口） | `docs/agent-customization/agent-skills` |
+| 自定义 Agent 当 subagent | `.agent.md` 的 `agents` 属性互相调用，构成研究→实现这类流水线（第 10 章 Subagents 的编辑器版） | `docs/agent-customization/custom-agents` |
+| 嵌套 AGENTS.md | monorepo 里子目录各有各的 AGENTS.md（实验特性，要开设置） | `docs/agent-customization/custom-instructions` |
+| 定制文件体检 | Chat Customizations Evaluations 扩展：用 AI 检查你的定制文件有没有自相矛盾、歧义 | `docs/agent-customization/overview` |
 
 ---
 
