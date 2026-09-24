@@ -1,0 +1,7 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      { "type": "command", "command": "node .github/hooks/log-tool-use.cjs" }
+    ]
+  }
+}

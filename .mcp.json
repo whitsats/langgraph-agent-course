@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "tutorial-docs": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "python", "tools/mcp/docs_server.py"]
+    }
+  }
+}

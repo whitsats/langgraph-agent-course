@@ -52,7 +52,7 @@ cd examples && uv run python 05_graph_basics.py   # 从 examples/（uv 会自动
 `05_graph_basics.py` 就是**第 05 章**的配套例子 —— 读到哪一章，就跑哪个数字开头的文件，不用查表。
 
 同一章需要多个例子时用 `a`/`b`/`c` 区分（第 06 章要三个：`06a` 落库、`06b` 短期记忆、`06c` 长期记忆）。
-几个章号没有对应文件，那是故意的：**01** 只有讲义没有例子，**11** 直接用 `run_all.py` 当回归测试，**13** 用的是 `../virtual_rnd_center/`，**09** 复用 `08a_index_offline.py`（都是索引与检索那些动作）。
+几个章号没有对应文件，那是故意的：**01** 只有讲义没有例子，**11** 直接用 `run_all.py` 当回归测试，**13** 用的是 `../virtual_rnd_center/`，**09** 复用 `08a_index_offline.py`（都是索引与检索那些动作），**14** 是速查表不用例子，**15** 的“例子”就是你自己的 VS Code（配套 MCP server 在 `../tools/mcp/docs_server.py`）。
 
 ## 第一组：不需要 Key（离线可跑）
 

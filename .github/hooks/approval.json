@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "type": "command",
+        "command": "node .github/hooks/require-approval.cjs",
+        "env": { "SENSITIVE_TOOL_NAME": "<先用审计日志 tool-use.log 查到真实工具名，再填这里>" }
+      }
+    ]
+  }
+}

@@ -22,6 +22,9 @@ examples/checkpoints.db-*
 *.sqlite
 *.sqlite3
 
+# 15 章 hook 审计钩子的日志（.github/hooks/log-tool-use.cjs 会追加）
+.github/hooks/tool-use.log
+
 # ── 文档站点的构建产物（由 tools/build_site.py 与 zensical 生成）──
 site-src/
 site-out/
