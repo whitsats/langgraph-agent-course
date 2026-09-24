@@ -43,12 +43,13 @@
 | 14 附录 | —（随时查） | — |
 | 15 附录B | `../tools/mcp/test_docs_server.py`（MCP server 回归，14 项断言）+ 你自己的 VS Code | 否 |
 | 16 附录C：Agent 安全体系 | `16_agent_security_lab.py` | 否 |
+| 17 附录D：规划与自我验证 | `17_plan_and_verify_lab.py` | 否 |
 
 有章号没有对应文件，是故意的：01 只有讲义，11 用 `run_all.py` 当回归，13 用的是案例工程。
 
 ---
 
-## 目录（16 章，全部已写完）
+## 目录（17 章，全部已写完）
 
 ### 第一部分：上手（先把东西跑起来）
 
@@ -86,6 +87,7 @@
 | 14 | [附录：API 速查与排错](14-附录.md) | — | 随时查 |
 | 15 | [附录B：在 VS Code 智能体模式里做真实开发](15-附录B-VSCode智能体模式.md) | 你的 VS Code + 本仓库 `.github/` 配置 | 1 天 |
 | 16 | [附录C：Agent 安全体系](16-附录C-Agent安全体系.md) | `16_agent_security_lab.py` | 1 天 |
+| 17 | [附录D：规划与自我验证](17-附录D-规划与自我验证.md) | `17_plan_and_verify_lab.py` | 1 天 |
 
 ---
 
@@ -165,7 +167,7 @@ uv run python examples/00_env_check.py --live
 
 一键复现：`uv run python examples/run_all.py`（离线 6 项 + 在线 9 项，跑完给结果表）。
 
-> 2026-09-24 增补：离线组收编第 16 章安全实验（`16_agent_security_lab.py`，0.1s），`--offline` 现为 **6/6 通过**；上表仍是 2026-09-23 那次全量实跑的存档。
+> 2026-09-24 增补：离线组收编第 16 章安全实验（`16_agent_security_lab.py`）与第 17 章规划实验（`17_plan_and_verify_lab.py`），`--offline` 现为 **7/7 通过**；上表仍是 2026-09-23 那次全量实跑的存档。
 
 实跑之后确认的事（都已回写进正文或示例）：
 
