@@ -117,3 +117,7 @@ uvx --default-index https://pypi.org/simple --with resvg-py --with pillow python
 | `virtual_rnd_center/output/session_audit.log` | `archive/dev-logs/session_audit.log` | 两万余行调试日志，污染案例输出目录 |
 
 未改动：`src/` 全部源码、`templates/`、`output/` 里的产物与报告、`AGENTS.md`、设计说明。案例本身仍可运行。
+
+## 许可
+
+[MIT](LICENSE) —— 讲义与示例都可以自由使用、修改与再分发；如果你把它用进了自己的课程或文章，提一句出处就好。
