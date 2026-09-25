@@ -132,7 +132,7 @@ def build_og_image(bold_path: str, regular_path: str) -> Image.Image:
     )
     draw.text(
         (100, 556),
-        "19 章讲义 · 17 个可直接运行的示例 · 近一半离线可跑（不需要 Key）",
+        "20 章讲义 · 22 个可直接运行的示例 · 一半离线可跑（不需要 Key）",
         font=f_small,
         fill=INDIGO_FAINT,
         anchor="ls",

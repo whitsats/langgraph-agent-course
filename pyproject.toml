@@ -18,6 +18,10 @@ dependencies = [
     # 显式声明，免得上游哪天收紧依赖，示例突然跑失败
     "pydantic",              # 04 / 12 的结构化输出
     "typing_extensions",     # 05 / 06a / 07b / 12 的类型注解
+    # 11c（流式 + 最小前端）：FastAPI 起服务、uvicorn 跑它、httpx 在自测里当前端
+    "fastapi",
+    "uvicorn",
+    "httpx",
 ]
 
 [tool.uv]

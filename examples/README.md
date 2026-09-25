@@ -51,8 +51,8 @@ cd examples && uv run python 05_graph_basics.py   # 从 examples/（uv 会自动
 
 `05_graph_basics.py` 就是**第 05 章**的配套例子 —— 读到哪一章，就跑哪个数字开头的文件，不用查表。
 
-同一章需要多个例子时用 `a`/`b`/`c` 区分（第 06 章要三个：`06a` 落库、`06b` 短期记忆、`06c` 长期记忆）。
-几个章号没有对应文件，那是故意的：**01** 只有讲义没有例子，**11** 直接用 `run_all.py` 当回归测试，**13** 用的是 `../virtual_rnd_center/`，**09** 复用 `08a_index_offline.py`（都是索引与检索那些动作），**14** 是速查表不用例子，**15** 的“例子”就是你自己的 VS Code（配套 MCP server 在 `../tools/mcp/docs_server.py`）；**16** 的例子不调模型——离线模拟“模型的决策”，专门复现攻击、看补丁怎么拦；**17** 同样离线——把计划当成能被校验、被执行、被修复的对象来演示；**18** 依然离线——两个 agent 交接，测契约、通道认证与注入防护。
+同一章需要多个例子时用 `a`/`b`/`c` 区分（第 06 章要三个：`06a` 落库、`06b` 短期记忆、`06c` 长期记忆；第 11 章四个：`11a` 评测集、`11b` 上下文预算、`11c` 流式前端、`11d` 成本账单）。
+几个章号没有对应文件，那是故意的：**01** 只有讲义没有例子，**13** 用的是 `../virtual_rnd_center/`，**09** 复用 `08a_index_offline.py`（都是索引与检索那些动作），**14** 是速查表不用例子，**15** 的“例子”就是你自己的 VS Code（配套 MCP server 在 `../tools/mcp/docs_server.py`）；**10b / 11a / 11b / 16 / 17 / 18** 都不调模型——离线模拟"模型的决策"，把结构本身测清楚（派活隔离、评测回归、上下文取舍、攻击与契约）；**11c / 11d** 需要 Key（流式管道与 token 账单）。
 
 ## 第一组：不需要 Key（离线可跑）
 
@@ -63,12 +63,15 @@ cd examples && uv run python 05_graph_basics.py   # 从 examples/（uv 会自动
 | `06a_persistence_resume.py` | 06 | SQLite 落盘 + `thread_id` | **分两次运行**：关掉进程，状态还在 |
 | `07a_human_approval_offline.py` | 07 | `interrupt()` 暂停 + `Command(resume=)` | 程序停在半路等人点头；恢复时节点从头重跑 |
 | `08a_index_offline.py` | 08 / 09 | 切分 / 元数据过滤 / 同 id 覆盖 / 删除 | 不花钱就能把知识库的索引动作全测一遍 |
+| `10b_supervisor_lab.py` | 10 | supervisor 派活 / 扇出 / 聚合 | 一个 worker 崩了，简报照样出（失败隔离）；Send API 的前置形态 |
+| `11a_eval_lab.py` | 11 | 评测集：跑分 + 版本回归对比 | 改 prompt 前后通过率 delta；编造与跳过审批被抓（`--judge` 才真调模型） |
+| `11b_context_budget_lab.py` | 11 | 上下文预算：全量 / 裁剪 / 摘要 | 裁剪省 token 但丢"花生过敏"；摘要才是长会话的解 |
 | `16_agent_security_lab.py` | 16 | 四个安全攻击实验（注入 / 投毒 / 权限） | ⚠️ 注入得手、✅ 补丁拦截——重点看实验 4 两种权限的两行对比 |
 | `17_plan_and_verify_lab.py` | 17 | 规划与自我验证四实验 | 一口气式的编造收尾 vs 计划被校验/修复；验证器拒绝编造的候选 |
 | `18_handoff_contract_lab.py` | 18 | 交接契约 + 通道认证四实验 | 自由文本交接丢数字；坏包死在门口；伪造/篡改/重放/过期消息全被拒；带毒字段不被执行；7 条契约测试锁两端（含类型层） |
 
-> 注：`00_env_check` 是自检工具、不进回归组——所以 `run_all.py --offline` 的 8 项 =
-> 上表除 00 外的 7 个脚本 + `06a` 跑两次，两处都是"8"但口径不同。
+> 注：`00_env_check` 是自检工具、不进回归组——所以 `run_all.py --offline` 的 11 项 =
+> 上表除 00 外的 10 个脚本 + `06a` 跑两次（两组都恰好叫"11"，但成员不同：文件口径含 00，回归口径不含）。
 
 ## 第二组：需要 Key
 
@@ -82,6 +85,8 @@ cd examples && uv run python 05_graph_basics.py   # 从 examples/（uv 会自动
 | `07b_hitl_graph.py` | 07 | 图 + 人工审批 | 小额自动、大额挂起等人点头 |
 | `08b_rag_agent.py` | 08 | 小知识库 + 检索工具 | 知识库里没有的问题，它该说"不知道"而不是编 |
 | `10_mcp_docs_server.py` | 10 | `MCPAdapter` 接官方文档 server | 不写工具也能有工具 |
+| `11c_stream_frontend.py` | 11 | **流式 + 最小前端**：FastAPI 包 SSE | 默认自测帧序；`--serve` 起服务后浏览器直接玩 |
+| `11d_cost_ledger.py` | 11 | token 成本账单 | 真调 3 次拿 `usage_metadata` 攒表；价格表留空由你填 |
 | `12_mini_project_coffee_shop.py` | 12 | **完整小项目** | 状态机 + 结构化输出 + 知识 + 人工 + 记忆拼在一起 |
 
 ---
@@ -111,12 +116,12 @@ uv run python examples/run_all.py --only 06    # 只跑第 06 章那一组（06a
 跑完给一张结果表；失败的会打印末尾报错。改动例子后建议重跑一遍，当作回归测试；
 改过某章的**断言/校验逻辑**，再跟着跑一次下面的变异检查。
 
-**12 个例子都自带断言**（`examples/_shared.py` 里的 `Checks`）：每条检查失败都会让脚本以
+**18 个例子都自带断言**（`examples/_shared.py` 里的 `Checks`）：每条检查失败都会让脚本以
 **非 0 退出码**结束，并列出是哪条不变量红了，所以结果表里的 ✅ 是真的 ✅——不是"跑完没崩"。
 
-- **离线组**（16 / 17 / 18）：第 16 章前三个实验是**演示型断言**——它们断言"漏洞确实存在"，
-  谁不小心把这个洞堵上了反而会红。
-- **在线组**（其余 9 个）：断言写在**语义特征**上（第 11 章），因为模型每次措辞都不同：
+- **离线组**（08a / 10b / 11a / 11b / 16 / 17 / 18）：第 16 章前三个实验是**演示型断言**——它们断言"漏洞确实存在"，
+  谁不小心把这个洞堵上了反而会红；其余都是普通的不变量断言。
+- **在线组**（其余 11 个）：断言写在**语义特征**上（第 11 章），因为模型每次措辞都不同：
   知识库里有的必须带对事实、没有的必须承认不知道且不编数字、大额退款必须中断、
   人工拒绝不得走成受理、同一 thread 的记忆不得丢。**行为不许变，措辞随便变。**
 
@@ -128,7 +133,7 @@ uv run python examples/run_all.py --only 06    # 只跑第 06 章那一组（06a
 抓它们的办法是**变异测试**：把每个关键不变量**故意改坏**，再跑一遍示例，看它是不是真的报了错。
 
 ```bash
-uv run python examples/mutation_check.py             # 全部（20 条，秒级，不需要 Key）
+uv run python examples/mutation_check.py             # 全部（23 条，秒级，不需要 Key）
 uv run python examples/mutation_check.py --only 18   # 只查第 18 章那个实验室
 uv run python examples/mutation_check.py --list      # 只列清单，不跑
 ```
@@ -142,7 +147,9 @@ uv run python examples/mutation_check.py --list      # 只列清单，不跑
 因为崩溃不是断言在咬人，不该算"杀死"。
 
 覆盖范围是**代码里强制执行的检查**：第 08 章 a 的租户隔离（元数据过滤谓词）、
-第 16 章实验 4（工具白名单 / 路径范围）、第 17 章（计划校验 / 重规划 / 验证器 / 断点）、
+第 10 章 b 的派活失败隔离（聚合不过滤状态 → 崩掉的 worker 混进简报）、
+第 11 章 a/b 的评测判卷与上下文裁剪、第 16 章实验 4（工具白名单 / 路径范围）、
+第 17 章（计划校验 / 重规划 / 验证器 / 断点）、
 第 18 章（契约校验各层 / 通道三件套 / 消费者纪律 / 契约测试）。
 第 16 章前三个实验是**故意展示漏洞**的演示，没有该红的地方。
 
@@ -158,17 +165,57 @@ uv run python examples/mutation_check.py --list      # 只列清单，不跑
 > 「⑤过期消息」用例才进表的，改坏它们原本什么都不红）。另加 `compile()` 前置校验：
 > 变异把源码改出语法错误时按"配置问题"报告，不再把崩溃误记成"杀死"。
 >
-> 注：变异检查只覆盖**离线组**的 08a 与三个实验室（秒级、不需要 Key）；在线组的 9 个例子
+> **2026-09-25 增补**：第 10 / 11 章补 5 个 lab（`10b_supervisor_lab`、`11a_eval_lab`、
+> `11b_context_budget_lab`、`11c_stream_frontend`、`11d_cost_ledger`），离线的三个
+> 各带一条变异进表，总数 **23 条**，23/23 被杀死。
+>
+> 注：变异检查只覆盖**离线组**带不变量的例子（秒级、不需要 Key）；在线组的 11 个例子
 > 靠 `run_all.py --live` 验证断言——每次都要真调模型，不适合逐条改坏重跑。
 
 ---
 
-## 验证状态（2026-09-24 最新实跑）
+## 验证状态（2026-09-25 最新实跑）
 
 网关 `https://api.agnes-ai.cn/v1`、模型 `agnes-2.5-flash`；Python 3.13.13 / langchain 1.4.2 / langgraph 1.2.12。
-下表耗时取自 2026-09-24 的实测（离线组与在线组各跑了一次），仅作参考（随网络与服务端负载波动）。
+耗时取自 2026-09-25 的实测，仅作参考（随网络与服务端负载波动）。
 
-**最新一次（2026-09-24，`agnes-2.5-flash`）—— 17/17 通过：**
+**离线组 11/11 + 变异检查 23/23 + 在线组 10/11（唯一失败见下）：**
+
+```
+  ✅ 05_graph_basics.py                 1.1s
+  ✅ 06a_persistence_resume.py first     1.1s
+  ✅ 06a_persistence_resume.py second    1.0s
+  ✅ 07a_human_approval_offline.py       1.1s
+  ✅ 08a_index_offline.py                0.9s
+  ✅ 10b_supervisor_lab.py               0.1s
+  ✅ 11a_eval_lab.py                     0.1s
+  ✅ 11b_context_budget_lab.py           0.1s
+  ✅ 16_agent_security_lab.py            0.1s
+  ✅ 17_plan_and_verify_lab.py           0.1s
+  ✅ 18_handoff_contract_lab.py          0.1s
+  ✅ 02_hello_agent.py                  10.0s
+  ✅ 03_handwritten_loop.py             10.4s
+  ✅ 04_structured_output.py             3.9s
+  ✅ 06b_memory_agent.py                24.9s
+  ✅ 06c_long_term_memory.py             6.0s
+  ✅ 07b_hitl_graph.py                  28.2s
+  ❌ 08b_rag_agent.py                   14.3s   ← 见下方说明；单跑通过（已实测）
+  ✅ 10_mcp_docs_server.py              37.0s
+  ✅ 11c_stream_frontend.py              2.8s
+  ✅ 11d_cost_ledger.py                 17.0s
+  ✅ 12_mini_project_coffee_shop.py      7.4s
+
+  通过 21/22
+```
+
+> **关于 08b 的那次 ❌（这是特性，不是 bug）**：全量连跑到末段时免费额度限流开始密集出现，
+> 08b 的两次 429 重试（20s + 45s）耗尽后，第三次的模型响应**真的降级了**——答案既丢了
+> "周六 22:00" 这个事实、又编造了价格数字，两条行为断言如实变红。断言没有误报：
+> 限流压力下的质量下降是真实发生的。**单跑或歇几分钟重跑即过**（均已实测）。
+> 这也是第 11 章"断言写在行为上"的活例子：它拦的不是措辞，是退化的回答。
+
+<details>
+<summary>历史记录（2026-09-24，模型 `agnes-2.5-flash`，17/17）</summary>
 
 ```
   ✅ 05_graph_basics.py                 1.1s
@@ -192,10 +239,12 @@ uv run python examples/mutation_check.py --list      # 只列清单，不跑
   通过 17/17
 ```
 
+</details>
+
 > **2026-09-24 顺带修复**：`08b` 的「周六 22:00」断言原来死抠字面「22」，模型把它说成
 > 「晚上十点」时会在全量连跑里误报失败（实测连挂两次、单跑通过）。已改成等价说法的
-> 正则并给模型加 `temperature=0`——这也是第 11 章"断言写在语义特征上"的活例子。
-> 另外 `run_all.py` 现在失败会以非 0 退出码结束（此前永远退出 0，当回归测试用会骗绿）。
+> 正则并给模型加 `temperature=0`。另外 `run_all.py` 现在失败会以非 0 退出码结束
+> （此前永远退出 0，当回归测试用会骗绿）。
 
 <details>
 <summary>历史记录（2026-09-23，模型 `agnes-2.5-flash`，14/14）</summary>

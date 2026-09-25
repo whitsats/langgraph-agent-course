@@ -113,6 +113,8 @@ async with MCPAdapter(DOCS_SERVER) as adapter:
 
 对应例子：`12_mini_project_coffee_shop.py` 就是一个最小形态的 custom workflow（classify → 条件边 → answer/approve → finalize）。**它已经是"多智能体"的一种了**，只是它没有用"多智能体"这个名号。
 
+上下级派活的形态（supervisor 拆活 → 扇出给多个 worker → 聚合、失败隔离）有一个离线 lab：`examples/10b_supervisor_lab.py`——一个 worker 崩了，简报照样出。它就是 Send API / 子图编排的前置形态：真编排时把模拟的 worker 换成子图节点，包装层原样保留。
+
 ---
 
 ## 概念：上下文契约——四种模式共同的真难点
@@ -207,6 +209,7 @@ async with MCPAdapter(DOCS_SERVER) as adapter:
 - MCP 页（`MCPAdapter` 全部用法与 target 推断）：`https://docs.langchain.com/oss/python/langchain/mcp`
 - 多智能体（四种模式详解）：`https://docs.langchain.com/oss/python/langchain/multi-agent`
 - 交接的落地版本（四层契约 + 通道认证）：第 18 章（附录E）+ `18_handoff_contract_lab.py`
+- 上下级派活的离线实验室（Send API 前置形态）：`10b_supervisor_lab.py`
 - Deep Agents：`https://docs.langchain.com/oss/python/deepagents/overview`
 - 沙箱执行：`https://docs.langchain.com/oss/python/langchain/sandbox`
 

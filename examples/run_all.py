@@ -28,6 +28,9 @@ OFFLINE = [
     ("06a_persistence_resume.py", "second"),
     ("07a_human_approval_offline.py", None),
     ("08a_index_offline.py", None),
+    ("10b_supervisor_lab.py", None),
+    ("11a_eval_lab.py", None),
+    ("11b_context_budget_lab.py", None),
     ("16_agent_security_lab.py", None),
     ("17_plan_and_verify_lab.py", None),
     ("18_handoff_contract_lab.py", None),
@@ -42,6 +45,8 @@ LIVE = [
     ("07b_hitl_graph.py", None),
     ("08b_rag_agent.py", None),
     ("10_mcp_docs_server.py", None),
+    ("11c_stream_frontend.py", None),
+    ("11d_cost_ledger.py", None),
     ("12_mini_project_coffee_shop.py", None),
 ]
 

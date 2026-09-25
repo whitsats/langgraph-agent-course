@@ -63,6 +63,7 @@
 | 36 | **Agent 安全体系（OWASP Agentic Top 10）** | 第 16 章（附录C） | ★★ | 注入 / 工具投毒 / 最小权限，Least agency + 强可观测 |
 | 37 | 规划与自我验证（plan-and-execute） | 第 17 章（附录D） | ★★ | 计划校验 / 执行断言 + 重规划 / generator-verifier |
 | 38 | 多智能体交接契约（通道认证） | 第 18 章（附录E） | ★★ | 四层契约 / 通道三件套 / 字段是数据 |
+| 39 | 生产代码精读 / 逆向规格化 | 第 19 章（附录F） | ★★ | **可选，约 1 周，不进 5 周核心**；第 12 章六问的进阶，方法引自 SDD L11，交付物 = spec + 偏差清单 |
 
 ★ 必学 ／ ◐ 知道即可、用时查 ／ ○ 暂不需要 ／ ✕ 明确不做
 
@@ -680,6 +681,9 @@ Generative UI（受控/声明式/开放式）、AI Elements、`assistant-ui`、C
 
 ## 11. 第 6 周：毕业项目——用 LangGraph 重写案例的 MVP 链路
 
+> **可选热身（约 1 周，不占核心预算，跳过不影响任何验收）**：先做附录 F（第 19 章）的任意一条线，
+> 把偏差清单里「值得学」的条目变成下面九条硬要求之外的第 10 条。
+
 原案例链路：`需求访谈 → 需求文档 → 架构+代码 → 代码审查 → 部署 → 接口测试 → 裁决 →（不过）重工`。三个毛病一起解决：
 
 | 原问题 | 你要怎么做 |
@@ -727,7 +731,7 @@ class RndState(TypedDict):
 
 ## 12. 如果只有 3 周（最小路径）
 
-砍掉：MCP、多智能体、Deep Agents、多模态、沙箱、前端接入、部署、长期记忆、混合检索与重排。
+砍掉：附录 F 精读、MCP、多智能体、Deep Agents、多模态、沙箱、前端接入、部署、长期记忆、混合检索与重排。
 保留：手写 loop → 图 + checkpointer + interrupt → 结构化输出 → 基础 RAG（相似度 + 元数据过滤）→ 毕业项目 → 评测脚本。
 **一个都不能砍的**：手写 loop、checkpointer、结构化输出、上下文裁剪、评测。
 
@@ -784,7 +788,7 @@ uv run python -c "from importlib.metadata import version; print(version('langcha
 
 概念光看懂没用，必须手上有能跑的东西。`examples/` 里每个概念配一个小例子，用同一个日常场景（咖啡店）贯穿。
 
-### 16.1 先跑这八个：不需要 API Key
+### 16.1 先跑这十一个：不需要 API Key
 
 ```bash
 uv venv && uv add langgraph langchain-core langchain-text-splitters langgraph-checkpoint-sqlite
@@ -798,6 +802,9 @@ uv run python examples/00_env_check.py
 | `06a_persistence_resume.py` | 06 | 状态数据库（§7.2） | **分两次运行**：关掉进程后状态还在（真落盘） |
 | `07a_human_approval_offline.py` | 07 | 人工中断（§7.4） | 程序停半路等人回答；恢复时节点从头重跑 |
 | `08a_index_offline.py` | 08 / 09 | 索引 / 过滤（§8.3–8.5） | 切分、元数据过滤、同 id 覆盖、删除——不花钱 |
+| `10b_supervisor_lab.py` | 10 | 多智能体派活（§9.2） | supervisor 拆活 → 扇出 → 聚合；一个 worker 崩了简报照样出（失败隔离） |
+| `11a_eval_lab.py` | 11 | 评测集（§10.1） | 用例表 + 跑分 + 改 prompt 前后回归对比；编造与跳过审批被抓 |
+| `11b_context_budget_lab.py` | 11 | 上下文工程（§10.3） | 全量 / 裁剪 / 摘要三种策略的 token 账与答案对错 |
 | `16_agent_security_lab.py` | 16 | 安全体系（§1.1 第 36 项） | 注入能得手、补丁能拦；最小权限只给"够用"那一行 |
 | `17_plan_and_verify_lab.py` | 17 | 规划与自我验证（§1.1 第 37 项） | 一口气式收尾会编造数字；验证器把编造的候选挡回去 |
 | `18_handoff_contract_lab.py` | 18 | 交接契约 / 通道认证（§1.1 第 38 项） | 自由文本交接丢依据；坏包死在门口；带毒字段不产生动作 |
@@ -821,6 +828,8 @@ uv run python examples/02_hello_agent.py
 | `07b_hitl_graph.py` | 07 | 图 + 人工审批（§7.4） | 小额自动、大额挂起等人点头 |
 | `08b_rag_agent.py` | 08 | RAG（§8.6） | 知识库没有的问题，它该说不知道而不是编 |
 | `10_mcp_docs_server.py` | 10 | MCP（§9.1） | 不写工具，直接接官方文档 server |
+| `11c_stream_frontend.py` | 11 | 流式输出 / 前端接入（§10.6） | FastAPI 把 token 流包成 SSE；默认自测帧序，`--serve` 浏览器玩 |
+| `11d_cost_ledger.py` | 11 | 成本可见（§10.5） | 真调 3 次拿 `usage_metadata` 攒 token 账单；价格表留空自己填 |
 | `12_mini_project_coffee_shop.py` | 12 | **完整小项目** | 状态机 + 结构化输出 + 知识 + 人工 + 记忆拼在一起 |
 
 一键全跑（跑完给结果表，改动后重跑等于回归测试）：

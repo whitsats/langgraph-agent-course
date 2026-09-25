@@ -19,7 +19,7 @@
 
 [project]
 site_name = "LangChain + LangGraph 智能体开发教程"
-site_description = "写给有编程经验、但没做过智能体的人 —— 19 章讲义（含 5 篇附录）+ 17 个可直接运行的示例"
+site_description = "写给有编程经验、但没做过智能体的人 —— 20 章讲义（含 6 篇附录）+ 22 个可直接运行的示例"
 site_url = "https://whitsats.github.io/langgraph-agent-course/"
 repo_url = "https://github.com/whitsats/langgraph-agent-course"
 repo_name = "whitsats/langgraph-agent-course"
@@ -55,6 +55,7 @@ nav = [
       { "16 附录C：Agent 安全体系" = "16-附录C-Agent安全体系.md" },
       { "17 附录D：规划与自我验证" = "17-附录D-规划与自我验证.md" },
       { "18 附录E：多智能体交接契约" = "18-附录E-多智能体交接契约.md" },
+      { "19 附录F：精读生产级 Agent 项目" = "19-附录F-精读生产级Agent项目.md" },
   ] },
   { "参考" = [
       { "学习计划（时间与取舍）" = "learning-plan.md" },
